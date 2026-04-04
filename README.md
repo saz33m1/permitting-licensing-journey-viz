@@ -6,7 +6,7 @@ An animated, data-driven visualization showing how permits, licenses, and compli
 
 Built with [USWDS](https://designsystem.digital.gov/) + [D3.js](https://d3js.org/). Part of the [Catalyst](https://github.com/catalyst-plc) open-source permitting platform.
 
-**[Live Demo →](https://saz33m1.github.io/journey-viz/)**
+**[Live Demo →](https://saz33m1.github.io/permitting-licensing-journey-viz/)**
 
 ---
 
