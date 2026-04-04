@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cross-Jurisdiction Journey Visualizer | Catalyst</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uswds/uswds@3.13.0/dist/css/uswds.min.css">
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<style>
+/* ── App layout (full viewport, USWDS doesn't cover this) ── */
+html,body{height:100%;margin:0;overflow:hidden}
+body{display:flex;flex-direction:column;background:#f0f0f0}
+.app-body{display:flex;flex:1;overflow:hidden}
+
+/* ── Header tweaks ── */
+.usa-header--basic .usa-nav-container{display:flex;align-items:center;justify-content:space-between;max-width:none}
+.header-ctrls{display:flex;gap:8px;align-items:center;padding:8px 0}
+.header-ctrls .usa-button{font-size:.78rem;padding:5px 14px;margin:0}
+.header-ctrls .usa-select{font-size:.78rem;padding:3px 24px 3px 8px;height:auto;margin:0;max-width:100px}
+
+/* ── Sidebar ── */
+.app-sidebar{width:300px;flex-shrink:0;background:#fff;border-right:1px solid #dfe1e2;overflow-y:auto;display:flex;flex-direction:column}
+.app-sidebar::-webkit-scrollbar{width:5px}
+.app-sidebar::-webkit-scrollbar-thumb{background:#dfe1e2;border-radius:3px}
+.sidebar-top{padding:8px 12px;border-bottom:1px solid #dfe1e2;display:flex;align-items:center;gap:8px}
+.sidebar-top .usa-input{font-size:.82rem;padding:6px 10px;margin:0;flex:1}
+.sidebar-top .toggle-link{font-size:.68rem;color:#005ea2;cursor:pointer;white-space:nowrap;text-decoration:underline;flex-shrink:0}
+.sidebar-body{flex:1;overflow-y:auto}
+
+/* Sidenav with category toggles */
+.sidebar-body .usa-sidenav{border:none}
+.sidebar-body .usa-sidenav a{font-size:.8rem;padding:5px 12px 5px 20px;border:none}
+.sidebar-body .usa-sidenav a:hover{background:#f0f0f0}
+.sidebar-body .usa-sidenav a.usa-current{color:#005ea2;font-weight:600;border-left:3px solid #005ea2;background:#e7f2f8}
+.sidebar-body .usa-sidenav__item{border:none}
+.sidebar-body .usa-sidenav__sublist{border:none}
+.cat-toggle{display:flex;align-items:center;width:100%;padding:8px 12px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#71767a;background:#fafafa;border:none;border-bottom:1px solid #f0f0f0;cursor:pointer;text-align:left;font-family:inherit}
+.cat-toggle:hover{background:#f0f0f0}
+.cat-toggle .chevron{margin-right:6px;font-size:.6rem;transition:transform .15s;display:inline-block;width:10px}
+.cat-toggle[aria-expanded=false] .chevron{transform:rotate(0deg)}
+.cat-toggle[aria-expanded=true] .chevron{transform:rotate(90deg)}
+.cat-toggle .cat-count{margin-left:auto;color:#a9aeb1;font-weight:500}
+.j-meta{float:right;display:flex;align-items:center;gap:5px}
+.j-dots{display:flex;gap:2px}
+.j-dot{width:5px;height:5px;border-radius:50%;display:inline-block;border:1px solid #dfe1e2}
+.j-count{font-size:.65rem;color:#71767a}
+
+/* ── Viz canvas ── */
+.viz-wrap{flex:1;position:relative;background:#fff;overflow:hidden}
+.viz-wrap svg{display:block}
+
+/* ── Landing ── */
+.landing{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;transition:opacity .4s}
+.landing.hidden{opacity:0}
+.landing h2{font-size:1.3rem;font-weight:300;color:#71767a;margin:0 0 6px}
+.landing p{font-size:.82rem;color:#a9aeb1;margin:0}
+.landing .stats{display:flex;gap:20px;justify-content:center;margin-top:18px}
+.landing .sn{font-size:1.8rem;font-weight:800;line-height:1}
+.landing .sl{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:#a9aeb1;margin-top:3px}
+
+/* ── Info card ── */
+.info-card{position:absolute;top:10px;right:10px;width:240px;opacity:0;transform:translateX(8px);transition:opacity .25s,transform .25s;pointer-events:none;z-index:10}
+.info-card.visible{opacity:1;transform:translateX(0);pointer-events:auto}
+.info-card .usa-card__container{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.info-card .usa-card__header{padding-bottom:2px}
+.info-card .usa-card__heading{font-size:.9rem}
+.ic-cat{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#005ea2;margin-bottom:6px}
+.ic-stats{display:flex;gap:6px;margin-bottom:8px}
+.ic-stat{flex:1;text-align:center;padding:5px;background:#f0f0f0;border-radius:4px}
+.ic-stat .n{font-size:1.1rem;font-weight:800}
+.ic-stat .l{font-size:.55rem;text-transform:uppercase;letter-spacing:.04em;color:#71767a}
+.ic-grp{margin-bottom:5px}
+.ic-grp-h{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px}
+.ic-grp ul{list-style:none;padding:0;margin:0}
+.ic-grp li{font-size:.75rem;padding:1px 0;color:#71767a}
+
+/* ── Network stats ── */
+.net-stats{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #dfe1e2;border-radius:6px;padding:8px 20px;display:flex;gap:24px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.net-stats.visible{opacity:1}
+.ns-v{font-size:1rem;font-weight:800;text-align:center}
+.ns-l{font-size:.55rem;text-transform:uppercase;letter-spacing:.05em;color:#71767a;text-align:center}
+
+/* ── Tooltip ── */
+.tip{position:absolute;background:#1b1b1b;color:#fff;border-radius:4px;padding:4px 9px;font-size:.7rem;pointer-events:none;opacity:0;transition:opacity .12s;z-index:20;max-width:220px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.tip.visible{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER (usa-header--basic) ═══ -->
+<div class="usa-overlay"></div>
+<header class="usa-header usa-header--basic" role="banner">
+  <div class="usa-nav-container">
+    <div class="usa-navbar">
+      <div class="usa-logo">
+        <em class="usa-logo__text">
+          <a href="/" title="Catalyst">Catalyst <span style="font-weight:400;color:#71767a">&middot; Cross-Jurisdiction Journey Visualizer</span></a>
+        </em>
+      </div>
+    </div>
+    <div class="header-ctrls">
+      <button class="usa-button usa-button--outline" id="btn-play">&#9654; Auto-Play</button>
+      <button class="usa-button usa-button--outline" id="btn-network">Show Network</button>
+      <select class="usa-select" id="sel-speed" aria-label="Animation speed">
+        <option value="2200">Slow</option>
+        <option value="1400" selected>Normal</option>
+        <option value="700">Fast</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ BODY ═══ -->
+<div class="app-body">
+  <!-- Sidebar -->
+  <aside class="app-sidebar">
+    <div class="sidebar-top">
+      <input class="usa-input" type="search" id="search" placeholder="Filter journeys..." aria-label="Filter journeys">
+      <span class="toggle-link" id="toggle-all">Collapse all</span>
+    </div>
+    <div class="sidebar-body" id="sidebar-body"></div>
+  </aside>
+
+  <!-- Visualization -->
+  <div class="viz-wrap" id="viz-wrap">
+    <svg id="viz" role="img" aria-label="Journey visualization across federal, state, and local jurisdictions"></svg>
+    <div class="landing" id="landing">
+      <h2>Select a journey to explore</h2>
+      <p>See how a single goal flows through<br>federal, state, and local government.</p>
+      <div class="stats" id="landing-stats"></div>
+    </div>
+    <div class="info-card" id="info-panel">
+      <div class="usa-card"><div class="usa-card__container">
+        <div class="usa-card__header"><h3 class="usa-card__heading" id="info-title"></h3></div>
+        <div class="usa-card__body" id="info-body"></div>
+      </div></div>
+    </div>
+    <div class="net-stats" id="net-stats"></div>
+    <div class="tip" id="tip"></div>
+  </div>
+</div>
+
+<!-- Inline data fallback for standalone/artifact use. On GitHub Pages, data/journeys.json takes precedence. -->
+<script id="inline-data" type="application/json">{
+  "jurisdictions": [
+    { "id": "federal", "name": "Federal" },
+    { "id": "state", "name": "State" },
+    { "id": "local", "name": "Local (City / County)" }
+  ],
+  "categories": [
+    { "id": "food", "name": "Food & Beverage" },
+    { "id": "retail", "name": "Retail & Services" },
+    { "id": "health", "name": "Health & Wellness" },
+    { "id": "childcare", "name": "Childcare & Education" },
+    { "id": "trades", "name": "Construction Trades" },
+    { "id": "profsvc", "name": "Professional Services" },
+    { "id": "transport", "name": "Transportation" },
+    { "id": "animal", "name": "Animal Services" },
+    { "id": "specialty", "name": "Specialty & Regulated" },
+    { "id": "proflic", "name": "Professional & Occupational Licensing" },
+    { "id": "bldg", "name": "Building & Construction Projects" },
+    { "id": "landuse", "name": "Land Use & Development" },
+    { "id": "events", "name": "Events & Temporary Permits" },
+    { "id": "housing", "name": "Residential & Housing" },
+    { "id": "envag", "name": "Environmental & Agriculture" }
+  ],
+  "plcNodes": [
+    { "id": "ein", "name": "EIN Registration", "jurisdiction": "federal" },
+    { "id": "fed_tax", "name": "Federal Tax Filing", "jurisdiction": "federal" },
+    { "id": "fda", "name": "FDA Registration", "jurisdiction": "federal" },
+    { "id": "atf", "name": "ATF License", "jurisdiction": "federal" },
+    { "id": "ttb", "name": "TTB Alcohol Permit", "jurisdiction": "federal" },
+    { "id": "fcc", "name": "FCC License", "jurisdiction": "federal" },
+    { "id": "dot", "name": "DOT / FMCSA Authority", "jurisdiction": "federal" },
+    { "id": "dea", "name": "DEA Registration", "jurisdiction": "federal" },
+    { "id": "faa", "name": "FAA Certification", "jurisdiction": "federal" },
+    { "id": "epa", "name": "EPA Permit", "jurisdiction": "federal" },
+    { "id": "usda", "name": "USDA License", "jurisdiction": "federal" },
+    { "id": "bg_check", "name": "Federal Background Check", "jurisdiction": "federal" },
+    { "id": "wetlands", "name": "Wetlands Permit (USACE)", "jurisdiction": "federal" },
+    { "id": "biz_reg", "name": "Business Registration", "jurisdiction": "state" },
+    { "id": "state_tax", "name": "State Tax Registration", "jurisdiction": "state" },
+    { "id": "sales_tax", "name": "Sales & Use Tax", "jurisdiction": "state" },
+    { "id": "prof_lic", "name": "Professional License", "jurisdiction": "state" },
+    { "id": "contr_lic", "name": "Contractor License", "jurisdiction": "state" },
+    { "id": "state_health", "name": "Health Dept License", "jurisdiction": "state" },
+    { "id": "liquor", "name": "Liquor License", "jurisdiction": "state" },
+    { "id": "state_env", "name": "Environmental Permit", "jurisdiction": "state" },
+    { "id": "workers_comp", "name": "Workers\u2019 Comp", "jurisdiction": "state" },
+    { "id": "pharmacy_lic", "name": "Pharmacy License", "jurisdiction": "state" },
+    { "id": "childcare", "name": "Childcare License", "jurisdiction": "state" },
+    { "id": "motor", "name": "Motor Carrier Permit", "jurisdiction": "state" },
+    { "id": "cannabis", "name": "Cannabis License", "jurisdiction": "state" },
+    { "id": "insurance", "name": "Insurance License", "jurisdiction": "state" },
+    { "id": "real_estate", "name": "Real Estate License", "jurisdiction": "state" },
+    { "id": "fire_marshal", "name": "Fire Marshal Approval", "jurisdiction": "state" },
+    { "id": "liability_ins", "name": "Liability Insurance", "jurisdiction": "state" },
+    { "id": "env_review", "name": "Environmental Review", "jurisdiction": "state" },
+    { "id": "water_rights", "name": "Water Rights Permit", "jurisdiction": "state" },
+    { "id": "timber", "name": "Timber Harvest Permit", "jurisdiction": "state" },
+    { "id": "agriculture", "name": "Agricultural Permit", "jurisdiction": "state" },
+    { "id": "mining", "name": "Mining Permit", "jurisdiction": "state" },
+    { "id": "foster_care", "name": "Foster Care License", "jurisdiction": "state" },
+    { "id": "biz_license", "name": "Business License", "jurisdiction": "local" },
+    { "id": "zoning", "name": "Zoning Approval", "jurisdiction": "local" },
+    { "id": "building", "name": "Building Permit", "jurisdiction": "local" },
+    { "id": "cert_occ", "name": "Certificate of Occupancy", "jurisdiction": "local" },
+    { "id": "fire_insp", "name": "Fire Inspection", "jurisdiction": "local" },
+    { "id": "health_insp", "name": "Health Inspection", "jurisdiction": "local" },
+    { "id": "signage", "name": "Signage Permit", "jurisdiction": "local" },
+    { "id": "special_use", "name": "Special Use Permit", "jurisdiction": "local" },
+    { "id": "home_occ", "name": "Home Occupation Permit", "jurisdiction": "local" },
+    { "id": "entertain", "name": "Entertainment License", "jurisdiction": "local" },
+    { "id": "demolition", "name": "Demolition Permit", "jurisdiction": "local" },
+    { "id": "grading", "name": "Grading / Excavation", "jurisdiction": "local" },
+    { "id": "stormwater", "name": "Stormwater Permit", "jurisdiction": "local" },
+    { "id": "historic", "name": "Historic Preservation Review", "jurisdiction": "local" },
+    { "id": "elec_permit", "name": "Electrical Permit", "jurisdiction": "local" },
+    { "id": "plumb_permit", "name": "Plumbing Permit", "jurisdiction": "local" },
+    { "id": "event_permit", "name": "Event Permit", "jurisdiction": "local" },
+    { "id": "film_permit", "name": "Film / Photo Permit", "jurisdiction": "local" },
+    { "id": "rental_reg", "name": "Rental Registration", "jurisdiction": "local" },
+    { "id": "str_license", "name": "Short-Term Rental License", "jurisdiction": "local" },
+    { "id": "housing_insp", "name": "Housing Inspection", "jurisdiction": "local" },
+    { "id": "street_close", "name": "Street Closure Permit", "jurisdiction": "local" }
+  ],
+  "journeys": [
+    { "id": "restaurant", "name": "Open a Restaurant", "cat": "food", "steps": ["ein","fed_tax","biz_reg","state_tax","sales_tax","state_health","liquor","zoning","building","fire_insp","health_insp","biz_license","signage"] },
+    { "id": "food_truck", "name": "Open a Food Truck", "cat": "food", "steps": ["ein","fed_tax","biz_reg","state_tax","sales_tax","state_health","health_insp","biz_license","special_use"] },
+    { "id": "bar", "name": "Open a Bar / Nightclub", "cat": "food", "steps": ["ein","fed_tax","biz_reg","state_tax","sales_tax","liquor","fire_marshal","entertain","zoning","building","fire_insp","biz_license","signage"] },
+    { "id": "bakery", "name": "Open a Bakery", "cat": "food", "steps": ["ein","fed_tax","fda","biz_reg","state_tax","sales_tax","state_health","zoning","building","health_insp","biz_license"] },
+    { "id": "catering", "name": "Start a Catering Business", "cat": "food", "steps": ["ein","fed_tax","biz_reg","state_tax","sales_tax","state_health","health_insp","biz_license"] },
+    { "id": "brewery", "name": "Start a Brewery", "cat": "food", "steps": ["ein","fed_tax","ttb","biz_reg","state_tax","liquor","state_env","zoning","building","biz_license"] },
+    { "id": "coffee", "name": "Open a Coffee Shop", "cat": "food", "steps": ["ein","fed_tax","biz_reg","state_tax","sales_tax","state_health","zoning","health_insp","biz_license","signage"] },
+    { "id": "winery", "name": "Start a Winery", "cat": "food", "steps": ["ein","fed_tax","ttb","usda","biz_reg","state_tax","liquor","zoning","biz_license"] },
+    { "id": "retail", "name": "Open a Retail Store", "cat": "retail", "steps": ["ein","fed_tax","biz_reg","state_tax","sales_tax","zoning","building","biz_license","signage"] },
+    { "id": "salon", "name": "Open a Hair Salon", "cat": "retail", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","zoning","health_insp","biz_license"] },
+    { "id": "barbershop", "name": "Open a Barbershop", "cat": "retail", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","zoning","health_insp","biz_license"] },
+    { "id": "tattoo", "name": "Open a Tattoo Parlor", "cat": "retail", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","state_health","zoning","health_insp","biz_license"] },
+    { "id": "dryclean", "name": "Start a Dry Cleaner", "cat": "retail", "steps": ["ein","fed_tax","epa","biz_reg","state_tax","state_env","zoning","biz_license"] },
+    { "id": "pawnshop", "name": "Open a Pawn Shop", "cat": "retail", "steps": ["ein","fed_tax","atf","biz_reg","state_tax","sales_tax","special_use","biz_license"] },
+    { "id": "autorepair", "name": "Start an Auto Repair Shop", "cat": "retail", "steps": ["ein","fed_tax","epa","biz_reg","state_tax","state_env","zoning","biz_license"] },
+    { "id": "pharmacy_j", "name": "Open a Pharmacy", "cat": "health", "steps": ["ein","fed_tax","dea","biz_reg","state_tax","pharmacy_lic","zoning","biz_license"] },
+    { "id": "dental", "name": "Start a Dental Practice", "cat": "health", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","zoning","building","biz_license"] },
+    { "id": "medical", "name": "Open a Medical Practice", "cat": "health", "steps": ["ein","fed_tax","dea","biz_reg","state_tax","prof_lic","zoning","building","biz_license"] },
+    { "id": "homehealth", "name": "Start a Home Health Agency", "cat": "health", "steps": ["ein","fed_tax","biz_reg","state_tax","state_health","workers_comp","biz_license"] },
+    { "id": "gym", "name": "Open a Gym / Fitness Center", "cat": "health", "steps": ["ein","fed_tax","biz_reg","state_tax","sales_tax","zoning","building","cert_occ","fire_insp","biz_license"] },
+    { "id": "massage", "name": "Start a Massage Practice", "cat": "health", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","zoning","biz_license"] },
+    { "id": "daycare", "name": "Open a Daycare Center", "cat": "childcare", "steps": ["ein","fed_tax","biz_reg","state_tax","childcare","fire_marshal","zoning","building","cert_occ","fire_insp","biz_license"] },
+    { "id": "school", "name": "Start a Private School", "cat": "childcare", "steps": ["ein","fed_tax","biz_reg","state_tax","state_health","fire_marshal","zoning","building","cert_occ","fire_insp","biz_license"] },
+    { "id": "tutoring", "name": "Open a Tutoring Center", "cat": "childcare", "steps": ["ein","fed_tax","biz_reg","state_tax","zoning","biz_license"] },
+    { "id": "contractor", "name": "Start a General Contracting Business", "cat": "trades", "steps": ["ein","fed_tax","biz_reg","state_tax","contr_lic","workers_comp","biz_license"] },
+    { "id": "plumbing_biz", "name": "Start a Plumbing Business", "cat": "trades", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","contr_lic","workers_comp","biz_license"] },
+    { "id": "electrical_biz", "name": "Start an Electrical Business", "cat": "trades", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","contr_lic","workers_comp","biz_license"] },
+    { "id": "landscaping", "name": "Start a Landscaping Business", "cat": "trades", "steps": ["ein","fed_tax","epa","biz_reg","state_tax","state_env","workers_comp","biz_license"] },
+    { "id": "lawfirm", "name": "Start a Law Firm", "cat": "profsvc", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","zoning","biz_license"] },
+    { "id": "accounting", "name": "Start an Accounting Firm", "cat": "profsvc", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","biz_license"] },
+    { "id": "realestate_biz", "name": "Start a Real Estate Brokerage", "cat": "profsvc", "steps": ["ein","fed_tax","biz_reg","state_tax","real_estate","biz_license"] },
+    { "id": "insuranceag", "name": "Start an Insurance Agency", "cat": "profsvc", "steps": ["ein","fed_tax","biz_reg","state_tax","insurance","biz_license"] },
+    { "id": "funeral", "name": "Open a Funeral Home", "cat": "profsvc", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","state_health","zoning","building","biz_license"] },
+    { "id": "trucking", "name": "Start a Trucking Company", "cat": "transport", "steps": ["ein","fed_tax","dot","biz_reg","state_tax","motor","workers_comp","biz_license"] },
+    { "id": "taxi", "name": "Start a Taxi / Rideshare", "cat": "transport", "steps": ["ein","fed_tax","biz_reg","state_tax","motor","special_use","biz_license"] },
+    { "id": "moving", "name": "Start a Moving Company", "cat": "transport", "steps": ["ein","fed_tax","dot","biz_reg","state_tax","motor","workers_comp","biz_license"] },
+    { "id": "petgroom", "name": "Open a Pet Grooming Business", "cat": "animal", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","zoning","biz_license"] },
+    { "id": "vet", "name": "Start a Veterinary Practice", "cat": "animal", "steps": ["ein","fed_tax","dea","biz_reg","state_tax","prof_lic","zoning","building","biz_license"] },
+    { "id": "petstore", "name": "Open a Pet Store", "cat": "animal", "steps": ["ein","fed_tax","usda","biz_reg","state_tax","sales_tax","zoning","biz_license"] },
+    { "id": "cannabis_d", "name": "Open a Cannabis Dispensary", "cat": "specialty", "steps": ["ein","fed_tax","biz_reg","state_tax","cannabis","zoning","special_use","building","biz_license","signage"] },
+    { "id": "firearms", "name": "Open a Firearms Dealer", "cat": "specialty", "steps": ["ein","fed_tax","atf","biz_reg","state_tax","zoning","special_use","biz_license"] },
+    { "id": "drones", "name": "Start a Drone Services Business", "cat": "specialty", "steps": ["ein","fed_tax","faa","biz_reg","state_tax","biz_license"] },
+    { "id": "hotel", "name": "Open a Hotel / B&B", "cat": "specialty", "steps": ["ein","fed_tax","biz_reg","state_tax","sales_tax","liquor","fire_marshal","zoning","building","cert_occ","fire_insp","health_insp","biz_license","signage"] },
+    { "id": "security", "name": "Start a Security Guard Company", "cat": "specialty", "steps": ["ein","fed_tax","biz_reg","state_tax","prof_lic","workers_comp","biz_license"] },
+    { "id": "event_venue", "name": "Open an Event Venue", "cat": "specialty", "steps": ["ein","fed_tax","biz_reg","state_tax","liquor","fire_marshal","entertain","zoning","building","cert_occ","fire_insp","biz_license","signage"] },
+    { "id": "nurse", "name": "Become a Registered Nurse", "cat": "proflic", "steps": ["bg_check","biz_reg","state_tax","prof_lic","liability_ins","biz_license"] },
+    { "id": "teacher", "name": "Become a Licensed Teacher", "cat": "proflic", "steps": ["bg_check","prof_lic"] },
+    { "id": "engineer_pe", "name": "Become a Licensed Engineer (PE)", "cat": "proflic", "steps": ["ein","biz_reg","state_tax","prof_lic","liability_ins","biz_license"] },
+    { "id": "architect", "name": "Become a Licensed Architect", "cat": "proflic", "steps": ["ein","biz_reg","state_tax","prof_lic","liability_ins","biz_license"] },
+    { "id": "social_worker", "name": "Become a Licensed Social Worker", "cat": "proflic", "steps": ["bg_check","biz_reg","state_tax","prof_lic","liability_ins","biz_license"] },
+    { "id": "psychologist", "name": "Become a Licensed Psychologist", "cat": "proflic", "steps": ["ein","bg_check","dea","biz_reg","state_tax","prof_lic","liability_ins","biz_license"] },
+    { "id": "cdl", "name": "Get a Commercial Driver\u2019s License", "cat": "proflic", "steps": ["fed_tax","dot","biz_reg","state_tax","prof_lic"] },
+    { "id": "pilot", "name": "Become a Commercial Pilot", "cat": "proflic", "steps": ["faa","biz_reg","prof_lic"] },
+    { "id": "electrician", "name": "Become a Licensed Electrician", "cat": "proflic", "steps": ["ein","biz_reg","state_tax","prof_lic","contr_lic"] },
+    { "id": "plumber_lic", "name": "Become a Licensed Plumber", "cat": "proflic", "steps": ["ein","biz_reg","state_tax","prof_lic","contr_lic"] },
+    { "id": "cpa", "name": "Become a CPA", "cat": "proflic", "steps": ["ein","biz_reg","state_tax","prof_lic","biz_license"] },
+    { "id": "re_agent", "name": "Become a Real Estate Agent", "cat": "proflic", "steps": ["biz_reg","state_tax","real_estate","biz_license"] },
+    { "id": "notary", "name": "Become a Notary Public", "cat": "proflic", "steps": ["bg_check","prof_lic"] },
+    { "id": "pi", "name": "Become a Licensed Private Investigator", "cat": "proflic", "steps": ["ein","bg_check","biz_reg","state_tax","prof_lic","biz_license"] },
+    { "id": "counselor", "name": "Become a Licensed Counselor", "cat": "proflic", "steps": ["ein","bg_check","biz_reg","state_tax","prof_lic","liability_ins","biz_license"] },
+    { "id": "home_inspector", "name": "Become a Licensed Home Inspector", "cat": "proflic", "steps": ["ein","biz_reg","state_tax","prof_lic","liability_ins","biz_license"] },
+    { "id": "appraiser", "name": "Become a Licensed Appraiser", "cat": "proflic", "steps": ["ein","biz_reg","state_tax","prof_lic","biz_license"] },
+    { "id": "surveyor", "name": "Become a Licensed Surveyor", "cat": "proflic", "steps": ["ein","biz_reg","state_tax","prof_lic","liability_ins","biz_license"] },
+    { "id": "home_remodel", "name": "Residential Home Remodel", "cat": "bldg", "steps": ["building","zoning","elec_permit","plumb_permit","fire_insp","cert_occ"] },
+    { "id": "comm_buildout", "name": "Commercial Build-Out", "cat": "bldg", "steps": ["ein","biz_reg","contr_lic","zoning","building","elec_permit","plumb_permit","fire_insp","cert_occ","biz_license"] },
+    { "id": "new_home", "name": "New Residential Construction", "cat": "bldg", "steps": ["ein","biz_reg","contr_lic","zoning","building","grading","stormwater","elec_permit","plumb_permit","fire_insp","cert_occ"] },
+    { "id": "demolition_j", "name": "Building Demolition", "cat": "bldg", "steps": ["ein","biz_reg","contr_lic","epa","state_env","demolition","stormwater"] },
+    { "id": "adu", "name": "Accessory Dwelling Unit (ADU)", "cat": "bldg", "steps": ["zoning","building","elec_permit","plumb_permit","fire_insp","cert_occ"] },
+    { "id": "solar", "name": "Solar Panel Installation", "cat": "bldg", "steps": ["ein","biz_reg","contr_lic","elec_permit","building","biz_license"] },
+    { "id": "pool", "name": "Pool / Spa Installation", "cat": "bldg", "steps": ["building","elec_permit","plumb_permit","zoning","fire_insp"] },
+    { "id": "comm_signage", "name": "Commercial Signage Installation", "cat": "bldg", "steps": ["signage","zoning","building","biz_license"] },
+    { "id": "historic_reno", "name": "Historic Building Renovation", "cat": "bldg", "steps": ["historic","zoning","building","elec_permit","plumb_permit","fire_insp","cert_occ"] },
+    { "id": "roofing", "name": "Roofing Project", "cat": "bldg", "steps": ["contr_lic","building","biz_license"] },
+    { "id": "hvac", "name": "HVAC Installation", "cat": "bldg", "steps": ["contr_lic","building","elec_permit","biz_license"] },
+    { "id": "deck", "name": "Deck / Patio Addition", "cat": "bldg", "steps": ["zoning","building"] },
+    { "id": "fence", "name": "Fence Installation", "cat": "bldg", "steps": ["zoning","building"] },
+    { "id": "elevator", "name": "Elevator Installation", "cat": "bldg", "steps": ["building","elec_permit","fire_insp","cert_occ"] },
+    { "id": "cell_tower", "name": "Cell Tower Construction", "cat": "bldg", "steps": ["fcc","zoning","special_use","building","env_review"] },
+    { "id": "subdivision", "name": "Subdivision of Land", "cat": "landuse", "steps": ["zoning","grading","stormwater","env_review","biz_license"] },
+    { "id": "rezoning", "name": "Rezoning Application", "cat": "landuse", "steps": ["zoning","special_use"] },
+    { "id": "comm_dev", "name": "Commercial Property Development", "cat": "landuse", "steps": ["ein","biz_reg","zoning","grading","stormwater","building","env_review","cert_occ","biz_license"] },
+    { "id": "env_remediation", "name": "Environmental Remediation", "cat": "landuse", "steps": ["epa","state_env","env_review","grading"] },
+    { "id": "mining_j", "name": "Mining / Quarry Operation", "cat": "landuse", "steps": ["ein","biz_reg","epa","state_env","mining","env_review","zoning","special_use","biz_license"] },
+    { "id": "logging", "name": "Logging / Timber Harvesting", "cat": "landuse", "steps": ["usda","state_env","timber","env_review"] },
+    { "id": "wetlands_dev", "name": "Wetlands Development", "cat": "landuse", "steps": ["wetlands","epa","state_env","env_review","zoning"] },
+    { "id": "ag_conversion", "name": "Agricultural Land Conversion", "cat": "landuse", "steps": ["usda","state_env","agriculture","zoning","env_review"] },
+    { "id": "wind_farm", "name": "Wind Farm Development", "cat": "landuse", "steps": ["ein","biz_reg","faa","epa","state_env","env_review","zoning","special_use","building"] },
+    { "id": "waterfront", "name": "Waterfront Development", "cat": "landuse", "steps": ["wetlands","epa","state_env","env_review","zoning","building","stormwater"] },
+    { "id": "street_fest", "name": "Street Festival / Fair", "cat": "events", "steps": ["event_permit","street_close","health_insp","fire_insp","biz_license"] },
+    { "id": "concert", "name": "Outdoor Concert / Music Festival", "cat": "events", "steps": ["event_permit","entertain","fire_insp","biz_license"] },
+    { "id": "film_prod", "name": "Film / TV Production", "cat": "events", "steps": ["film_permit","street_close","biz_license"] },
+    { "id": "fireworks", "name": "Fireworks Display", "cat": "events", "steps": ["event_permit","fire_insp","atf","biz_license"] },
+    { "id": "food_vendor", "name": "Food Vendor at Event", "cat": "events", "steps": ["event_permit","state_health","health_insp","biz_license"] },
+    { "id": "block_party", "name": "Block Party", "cat": "events", "steps": ["event_permit","street_close"] },
+    { "id": "farmers_mkt", "name": "Farmers Market", "cat": "events", "steps": ["event_permit","agriculture","health_insp","biz_license"] },
+    { "id": "charity_run", "name": "Charity Run / Walk", "cat": "events", "steps": ["event_permit","street_close","biz_license"] },
+    { "id": "popup", "name": "Pop-Up Shop", "cat": "events", "steps": ["event_permit","sales_tax","biz_license"] },
+    { "id": "wedding_out", "name": "Outdoor Wedding Venue", "cat": "events", "steps": ["event_permit","liquor","biz_license"] },
+    { "id": "landlord", "name": "Become a Residential Landlord", "cat": "housing", "steps": ["ein","biz_reg","state_tax","rental_reg","housing_insp","biz_license"] },
+    { "id": "str", "name": "Start a Short-Term Rental (Airbnb)", "cat": "housing", "steps": ["ein","biz_reg","state_tax","sales_tax","str_license","zoning","biz_license"] },
+    { "id": "group_home", "name": "Open a Group Home", "cat": "housing", "steps": ["ein","biz_reg","state_health","foster_care","zoning","fire_insp","biz_license"] },
+    { "id": "home_daycare", "name": "Start a Home Daycare", "cat": "housing", "steps": ["ein","biz_reg","childcare","fire_insp","health_insp","home_occ","biz_license"] },
+    { "id": "home_biz", "name": "Start a Home-Based Business", "cat": "housing", "steps": ["ein","biz_reg","state_tax","home_occ","biz_license"] },
+    { "id": "foster", "name": "Become a Foster Care Provider", "cat": "housing", "steps": ["bg_check","foster_care","fire_insp","housing_insp"] },
+    { "id": "multi_unit", "name": "Convert Property to Multi-Unit", "cat": "housing", "steps": ["zoning","building","elec_permit","plumb_permit","fire_insp","cert_occ","rental_reg"] },
+    { "id": "affordable", "name": "Affordable Housing Development", "cat": "housing", "steps": ["ein","biz_reg","state_tax","env_review","zoning","building","cert_occ","biz_license"] },
+    { "id": "small_farm", "name": "Start a Small Farm", "cat": "envag", "steps": ["ein","usda","biz_reg","state_tax","agriculture","biz_license"] },
+    { "id": "farm_stand", "name": "Open a Farm Stand", "cat": "envag", "steps": ["ein","biz_reg","sales_tax","agriculture","health_insp","biz_license"] },
+    { "id": "aquaculture", "name": "Start an Aquaculture Operation", "cat": "envag", "steps": ["ein","usda","epa","biz_reg","state_env","water_rights","biz_license"] },
+    { "id": "water_rights_j", "name": "Apply for Water Rights", "cat": "envag", "steps": ["water_rights","env_review"] },
+    { "id": "pesticide", "name": "Start a Pesticide Application Business", "cat": "envag", "steps": ["ein","epa","biz_reg","state_env","prof_lic","biz_license"] },
+    { "id": "composting", "name": "Start a Composting Facility", "cat": "envag", "steps": ["ein","epa","biz_reg","state_env","env_review","zoning","special_use","biz_license"] },
+    { "id": "cannabis_grow", "name": "Start a Cannabis Grow Operation", "cat": "envag", "steps": ["ein","biz_reg","state_tax","cannabis","state_env","water_rights","zoning","biz_license"] },
+    { "id": "organic", "name": "Get Organic Certification", "cat": "envag", "steps": ["usda","agriculture","biz_license"] }
+  ]
+}</script>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// COLORS — Federal (navy), State (green), Local (orange)
+// ═══════════════════════════════════════════════════════
+const JC = {
+  federal: { fill:'#1a4480', light:'#e1eaf4', bg:'rgba(26,68,128,.04)' },
+  state:   { fill:'#1b7742', light:'#daf0e3', bg:'rgba(27,119,66,.04)' },
+  local:   { fill:'#c05600', light:'#fce2cc', bg:'rgba(192,86,0,.04)' }
+};
+
+// ═══════════════════════════════════════════════════════
+// DATA — loaded from data/journeys.json
+// ═══════════════════════════════════════════════════════
+let JURISDICTIONS, PLC_NODES, CATS, JOURNEYS, nodeMap={}, catName={};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const S={active:null,network:false,playing:false,playIdx:0,playTimer:null,speed:1400,W:0,H:0,bands:{}};
+const wrap=document.getElementById('viz-wrap');
+const svg=d3.select('#viz');
+
+// ═══════════════════════════════════════════════════════
+// LAYOUT & BASE RENDER
+// ═══════════════════════════════════════════════════════
+function resize(){
+  S.W=wrap.clientWidth;S.H=wrap.clientHeight;
+  svg.attr('width',S.W).attr('height',S.H);
+  const gap=4,h=(S.H-gap*2)/3;
+  JURISDICTIONS.forEach((j,i)=>{S.bands[j.id]={y:i*(h+gap),h}});
+  renderBase();
+  if(S.active)renderJourney(JOURNEYS.find(j=>j.id===S.active),false);
+  else if(S.network)showNetwork();
+}
+
+function renderBase(){
+  svg.selectAll('*').remove();
+  const defs=svg.append('defs');
+  ['federal','state','local'].forEach(j=>{
+    const f=defs.append('filter').attr('id',`g-${j}`).attr('x','-40%').attr('y','-40%').attr('width','180%').attr('height','180%');
+    f.append('feGaussianBlur').attr('stdDeviation','5').attr('result','b');
+    f.append('feFlood').attr('flood-color',JC[j].fill).attr('flood-opacity','.3').attr('result','c');
+    f.append('feComposite').attr('in','c').attr('in2','b').attr('operator','in').attr('result','g');
+    const m=f.append('feMerge');m.append('feMergeNode').attr('in','g');m.append('feMergeNode').attr('in','SourceGraphic');
+  });
+  const pg=defs.append('filter').attr('id','pg').attr('x','-80%').attr('y','-80%').attr('width','260%').attr('height','260%');
+  pg.append('feGaussianBlur').attr('stdDeviation','3').attr('result','b');
+  const pm=pg.append('feMerge');pm.append('feMergeNode').attr('in','b');pm.append('feMergeNode').attr('in','SourceGraphic');
+  JURISDICTIONS.forEach(jur=>{
+    const b=S.bands[jur.id];const g=svg.append('g').attr('class',`band-${jur.id}`);
+    g.append('rect').attr('x',0).attr('y',b.y).attr('width',S.W).attr('height',b.h).attr('fill',JC[jur.id].bg);
+    g.append('text').attr('x',14).attr('y',b.y+16).attr('font-size','10px').attr('font-weight',700).attr('fill',JC[jur.id].fill).attr('opacity',.45).attr('letter-spacing','.1em').attr('font-family','Source Sans Pro,sans-serif').text(jur.name.toUpperCase());
+  });
+  svg.append('g').attr('id','conns');svg.append('g').attr('id','particles');svg.append('g').attr('id','nodes');
+}
+
+// ═══════════════════════════════════════════════════════
+// JOURNEY RENDERING (only active nodes)
+// ═══════════════════════════════════════════════════════
+function renderJourney(j,anim){
+  if(!j)return;
+  document.getElementById('landing').classList.add('hidden');
+  const active=j.steps.map(id=>nodeMap[id]).filter(Boolean);
+  const grp={federal:[],state:[],local:[]};
+  active.forEach(n=>grp[n.jurisdiction].push(n));
+  const cvs=document.createElement('canvas'),ctx=cvs.getContext('2d');
+  ctx.font='12px Source Sans Pro,sans-serif';
+  active.forEach(n=>{n._tw=ctx.measureText(n.name).width;n._nw=n._tw+20;n._nh=28});
+  const GAP=18;
+  Object.entries(grp).forEach(([jur,ns])=>{
+    if(!ns.length)return;const b=S.bands[jur];
+    const tw=ns.reduce((s,n)=>s+n._nw,0)+(ns.length-1)*GAP;
+    let x=(S.W-tw)/2;const y=b.y+b.h/2;
+    ns.forEach(n=>{n._x=x+n._nw/2;n._y=y;x+=n._nw+GAP});
+  });
+  const nG=svg.select('#nodes');const sel=nG.selectAll('.node').data(active,d=>d.id);
+  sel.exit().transition().duration(200).attr('opacity',0).remove();
+  const en=sel.enter().append('g').attr('class','node').attr('opacity',0).attr('transform',d=>`translate(${d._x},${d._y}) scale(.7)`).style('cursor','pointer');
+  en.append('rect').attr('x',d=>-d._nw/2).attr('y',d=>-d._nh/2).attr('width',d=>d._nw).attr('height',d=>d._nh).attr('rx',4).attr('fill',d=>JC[d.jurisdiction].light).attr('stroke',d=>JC[d.jurisdiction].fill).attr('stroke-width',1.5);
+  en.append('text').attr('text-anchor','middle').attr('dominant-baseline','central').attr('font-size','11.5px').attr('font-weight',600).attr('font-family','Source Sans Pro,sans-serif').attr('fill',d=>JC[d.jurisdiction].fill).text(d=>d.name);
+  en.on('mouseenter',(e,d)=>showTip(e,d)).on('mouseleave',hideTip);
+  const dur=anim?300:0;
+  en.transition().duration(dur).delay((_,i)=>anim?i*40:0).attr('opacity',1).attr('transform',d=>`translate(${d._x},${d._y}) scale(1)`);
+  sel.transition().duration(dur).attr('transform',d=>`translate(${d._x},${d._y}) scale(1)`).attr('opacity',1);
+  drawConns(j,anim);if(anim)setTimeout(()=>launchP(j),active.length*40+200);
+}
+
+function drawConns(j,anim){
+  const g=svg.select('#conns');g.selectAll('*').remove();
+  for(let i=0;i<j.steps.length-1;i++){
+    const a=nodeMap[j.steps[i]],b=nodeMap[j.steps[i+1]];if(!a||!b)continue;
+    const c=JC[b.jurisdiction].fill;
+    const p=g.append('path').attr('d',curve(a,b)).attr('fill','none').attr('stroke',c).attr('stroke-opacity',.2).attr('stroke-width',1.5);
+    if(anim){const l=p.node().getTotalLength();p.attr('stroke-dasharray',`${l} ${l}`).attr('stroke-dashoffset',l).transition().delay(i*S.speed*.3).duration(S.speed*.5).ease(d3.easeQuadOut).attr('stroke-dashoffset',0)}
+  }
+}
+function curve(a,b){
+  const dy=b._y-a._y;
+  if(Math.abs(dy)<5)return`M${a._x},${a._y} Q${(a._x+b._x)/2},${a._y-25} ${b._x},${b._y}`;
+  return`M${a._x},${a._y} C${a._x},${a._y+dy*.45} ${b._x},${b._y-dy*.45} ${b._x},${b._y}`;
+}
+function launchP(j){
+  const pG=svg.select('#particles');pG.selectAll('*').remove();
+  const segs=[];for(let i=0;i<j.steps.length-1;i++){const a=nodeMap[j.steps[i]],b=nodeMap[j.steps[i+1]];if(a&&b)segs.push({a,b,i})}
+  function wave(){
+    if(S.active!==j.id&&!S.playing)return;
+    segs.forEach(({a,b,i:idx})=>{
+      const c=JC[b.jurisdiction].fill;const tmp=document.createElementNS('http://www.w3.org/2000/svg','path');tmp.setAttribute('d',curve(a,b));const l=tmp.getTotalLength();
+      for(let p=0;p<2;p++){const d=pG.append('circle').attr('r',3).attr('fill',c).attr('opacity',0).attr('filter','url(#pg)');
+        d.transition().delay(idx*S.speed*.3+p*140).duration(0).attr('opacity',.85).transition().duration(S.speed*.7).ease(d3.easeLinear).attrTween('cx',()=>t=>tmp.getPointAtLength(t*l).x).attrTween('cy',()=>t=>tmp.getPointAtLength(t*l).y).transition().duration(160).attr('opacity',0).remove()}
+    });
+    setTimeout(wave,segs.length*S.speed*.3+S.speed*.7+600);
+  }
+  wave();
+}
+
+// ═══════════════════════════════════════════════════════
+// NETWORK MODE
+// ═══════════════════════════════════════════════════════
+function showNetwork(){
+  document.getElementById('landing').classList.add('hidden');
+  svg.select('#conns').selectAll('*').remove();svg.select('#particles').selectAll('*').remove();
+  const freq={};PLC_NODES.forEach(n=>freq[n.id]=0);JOURNEYS.forEach(j=>j.steps.forEach(s=>freq[s]++));
+  const mf=Math.max(...Object.values(freq));
+  const grp={federal:[],state:[],local:[]};PLC_NODES.forEach(n=>{n._freq=freq[n.id];grp[n.jurisdiction].push(n)});
+  const cvs=document.createElement('canvas'),ctx=cvs.getContext('2d');ctx.font='9.5px Source Sans Pro,sans-serif';
+  const GAP=10;
+  Object.entries(grp).forEach(([jur,ns])=>{
+    const b=S.bands[jur];ns.forEach(n=>{n._tw=ctx.measureText(n.name).width;n._nw=n._tw+14;n._nh=22});
+    const usable=S.W-28;const rows=[[]];let rw=0;
+    ns.forEach(n=>{if(rw+n._nw+GAP>usable&&rows[rows.length-1].length){rows.push([]);rw=0}rows[rows.length-1].push(n);rw+=n._nw+GAP});
+    const rH=26,tH=rows.length*rH,sY=b.y+(b.h-tH)/2+6;
+    rows.forEach((row,ri)=>{const tw=row.reduce((s,n)=>s+n._nw,0)+(row.length-1)*GAP;let x=(S.W-tw)/2;row.forEach(n=>{n._x=x+n._nw/2;n._y=sY+ri*rH;x+=n._nw+GAP})});
+  });
+  const nG=svg.select('#nodes');const sel=nG.selectAll('.node').data(PLC_NODES.slice(),d=>d.id);
+  sel.exit().transition().duration(200).attr('opacity',0).remove();
+  const en=sel.enter().append('g').attr('class','node').attr('opacity',0).attr('transform',d=>`translate(${d._x},${d._y}) scale(.8)`).style('cursor','pointer');
+  en.append('rect').attr('x',d=>-d._nw/2).attr('y',d=>-d._nh/2).attr('width',d=>d._nw).attr('height',d=>d._nh).attr('rx',3).attr('fill',d=>d3.interpolate('#fff',JC[d.jurisdiction].light)(d._freq/mf)).attr('stroke',d=>JC[d.jurisdiction].fill).attr('stroke-width',d=>.5+(d._freq/mf)*1.5).attr('stroke-opacity',d=>.3+(d._freq/mf)*.7);
+  en.append('text').attr('text-anchor','middle').attr('dominant-baseline','central').attr('font-size','9.5px').attr('font-weight',d=>d._freq/mf>.5?700:500).attr('font-family','Source Sans Pro,sans-serif').attr('fill',d=>d3.interpolate('#a9aeb1',JC[d.jurisdiction].fill)(d._freq/mf)).text(d=>d.name);
+  en.on('mouseenter',(e,d)=>showTip(e,d)).on('mouseleave',hideTip);
+  en.transition().duration(300).delay((_,i)=>i*12).attr('opacity',1).attr('transform',d=>`translate(${d._x},${d._y}) scale(1)`);
+  sel.transition().duration(300).attr('transform',d=>`translate(${d._x},${d._y}) scale(1)`);
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+  const tF=sorted.find(([id])=>nodeMap[id].jurisdiction==='federal');
+  const tS=sorted.find(([id])=>nodeMap[id].jurisdiction==='state');
+  const tL=sorted.find(([id])=>nodeMap[id].jurisdiction==='local');
+  const avg=(JOURNEYS.reduce((s,j)=>s+j.steps.length,0)/JOURNEYS.length).toFixed(1);
+  const ns=document.getElementById('net-stats');
+  ns.innerHTML=`<div><div class="ns-v">${JOURNEYS.length}</div><div class="ns-l">Journeys</div></div><div><div class="ns-v">${PLC_NODES.length}</div><div class="ns-l">PLC Types</div></div><div><div class="ns-v">${avg}</div><div class="ns-l">Avg Steps</div></div><div><div class="ns-v" style="color:${JC.federal.fill}">${tF?nodeMap[tF[0]].name:'-'}</div><div class="ns-l">Top Federal</div></div><div><div class="ns-v" style="color:${JC.state.fill}">${tS?nodeMap[tS[0]].name:'-'}</div><div class="ns-l">Top State</div></div><div><div class="ns-v" style="color:${JC.local.fill}">${tL?nodeMap[tL[0]].name:'-'}</div><div class="ns-l">Top Local</div></div>`;
+  ns.classList.add('visible');
+}
+
+// ═══════════════════════════════════════════════════════
+// SIDEBAR (usa-accordion + usa-sidenav)
+// ═══════════════════════════════════════════════════════
+function buildSidebar(){
+  const sb=document.getElementById('sidebar-body');
+  const nav=document.createElement('nav');nav.setAttribute('aria-label','Journey navigation');
+  const topUl=document.createElement('ul');topUl.className='usa-sidenav';
+
+  CATS.forEach(cat=>{
+    const items=JOURNEYS.filter(j=>j.cat===cat.id);
+    if(!items.length)return;
+    const catLi=document.createElement('li');catLi.className='usa-sidenav__item';
+
+    // Category toggle button
+    const btn=document.createElement('button');btn.type='button';btn.className='cat-toggle';
+    btn.setAttribute('aria-expanded','true');
+    btn.innerHTML=`<span class="chevron">&#9656;</span>${cat.name}<span class="cat-count">${items.length}</span>`;
+    catLi.appendChild(btn);
+
+    // Journey sublist
+    const sub=document.createElement('ul');sub.className='usa-sidenav__sublist';sub.id=`cat-${cat.id}`;
+    items.forEach(j=>{
+      const jurs=new Set(j.steps.map(s=>nodeMap[s]?.jurisdiction));
+      const li=document.createElement('li');li.className='usa-sidenav__item';
+      const a=document.createElement('a');a.href='javascript:void(0);';a.dataset.id=j.id;
+      a.innerHTML=`${j.name}<span class="j-meta"><span class="j-dots"><span class="j-dot" style="background:${jurs.has('federal')?JC.federal.fill:'transparent'}"></span><span class="j-dot" style="background:${jurs.has('state')?JC.state.fill:'transparent'}"></span><span class="j-dot" style="background:${jurs.has('local')?JC.local.fill:'transparent'}"></span></span><span class="j-count">${j.steps.length}</span></span>`;
+      a.addEventListener('click',()=>selectJourney(j.id));
+      li.appendChild(a);sub.appendChild(li);
+    });
+    catLi.appendChild(sub);topUl.appendChild(catLi);
+
+    // Toggle
+    btn.addEventListener('click',()=>{
+      const exp=btn.getAttribute('aria-expanded')==='true';
+      btn.setAttribute('aria-expanded',String(!exp));
+      sub.hidden=exp;
+    });
+  });
+  nav.appendChild(topUl);sb.appendChild(nav);
+}
+
+// Search filter
+document.getElementById('search').addEventListener('input',e=>{
+  const q=e.target.value.toLowerCase().trim();
+  document.querySelectorAll('.usa-sidenav__item').forEach(li=>{
+    const a=li.querySelector('a');
+    const match=!q||a.textContent.toLowerCase().includes(q);
+    li.style.display=match?'':'none';
+  });
+  // Auto-expand categories with matches
+  if(q){
+    document.querySelectorAll('.cat-toggle').forEach(btn=>{
+      const sub=btn.nextElementSibling;if(!sub)return;
+      const hasVisible=[...sub.querySelectorAll('.usa-sidenav__item')].some(li=>li.style.display!=='none');
+      if(hasVisible){btn.setAttribute('aria-expanded','true');sub.hidden=false}
+      else{btn.setAttribute('aria-expanded','false');sub.hidden=true}
+    });
+  }
+});
+
+// Toggle expand/collapse all
+const toggleAll=document.getElementById('toggle-all');
+let allExpanded=true;
+toggleAll.addEventListener('click',()=>{
+  allExpanded=!allExpanded;
+  toggleAll.textContent=allExpanded?'Collapse all':'Expand all';
+  document.querySelectorAll('.cat-toggle').forEach(b=>{
+    b.setAttribute('aria-expanded',String(allExpanded));
+    const sub=b.nextElementSibling;if(sub)sub.hidden=!allExpanded;
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// SELECTION & CONTROLS
+// ═══════════════════════════════════════════════════════
+function selectJourney(id){
+  if(S.network)toggleNetwork();
+  S.active=id;
+  document.querySelectorAll('.usa-sidenav a').forEach(a=>a.classList.toggle('usa-current',a.dataset.id===id));
+  const j=JOURNEYS.find(j=>j.id===id);
+  renderJourney(j,true);showInfo(j);
+  // Ensure category is expanded
+  const catEl=document.getElementById(`cat-${j.cat}`);
+  if(catEl&&catEl.hidden){catEl.hidden=false;const btn=catEl.previousElementSibling;if(btn)btn.setAttribute('aria-expanded','true')}
+}
+function deselect(){
+  S.active=null;document.querySelectorAll('.usa-sidenav a').forEach(a=>a.classList.remove('usa-current'));
+  svg.select('#conns').selectAll('*').remove();svg.select('#particles').selectAll('*').remove();
+  svg.select('#nodes').selectAll('*').transition().duration(200).attr('opacity',0).remove();
+  document.getElementById('landing').classList.remove('hidden');hideInfo();
+}
+function toggleNetwork(){
+  S.network=!S.network;const b=document.getElementById('btn-network');
+  b.classList.toggle('usa-button--secondary',S.network);b.textContent=S.network?'Exit Network':'Show Network';
+  if(S.network){if(S.playing)togglePlay();S.active=null;document.querySelectorAll('.usa-sidenav a').forEach(a=>a.classList.remove('usa-current'));hideInfo();showNetwork()}
+  else{document.getElementById('net-stats').classList.remove('visible');svg.select('#nodes').selectAll('*').transition().duration(200).attr('opacity',0).remove();document.getElementById('landing').classList.remove('hidden')}
+}
+function togglePlay(){
+  S.playing=!S.playing;const b=document.getElementById('btn-play');
+  if(S.playing){if(S.network)toggleNetwork();b.textContent='\u23F8 Pause';b.classList.add('usa-button--secondary');S.playIdx=0;playNext()}
+  else{b.textContent='\u25B6 Auto-Play';b.classList.remove('usa-button--secondary');clearTimeout(S.playTimer)}
+}
+function playNext(){
+  if(!S.playing)return;if(S.playIdx>=JOURNEYS.length)S.playIdx=0;
+  const j=JOURNEYS[S.playIdx];S.active=j.id;
+  document.querySelectorAll('.usa-sidenav a').forEach(a=>a.classList.toggle('usa-current',a.dataset.id===j.id));
+  const el=document.querySelector(`.usa-sidenav a[data-id="${j.id}"]`);
+  if(el){
+    const catEl2=document.getElementById(`cat-${j.cat}`);
+    if(catEl2&&catEl2.hidden){catEl2.hidden=false;const btn2=catEl2.previousElementSibling;if(btn2)btn2.setAttribute('aria-expanded','true')}
+    el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  renderJourney(j,true);showInfo(j);S.playIdx++;
+  S.playTimer=setTimeout(playNext,j.steps.length*S.speed*.3+S.speed+1200);
+}
+
+// ═══════════════════════════════════════════════════════
+// INFO PANEL
+// ═══════════════════════════════════════════════════════
+function showInfo(j){
+  const fed=j.steps.filter(s=>nodeMap[s]?.jurisdiction==='federal');
+  const st=j.steps.filter(s=>nodeMap[s]?.jurisdiction==='state');
+  const loc=j.steps.filter(s=>nodeMap[s]?.jurisdiction==='local');
+  document.getElementById('info-title').textContent=j.name;
+  document.getElementById('info-body').innerHTML=`
+    <div class="ic-cat">${catName[j.cat]}</div>
+    <div class="ic-stats"><div class="ic-stat"><div class="n">${j.steps.length}</div><div class="l">Steps</div></div><div class="ic-stat"><div class="n">${new Set(j.steps.map(s=>nodeMap[s]?.jurisdiction)).size}</div><div class="l">Levels</div></div></div>
+    ${fed.length?`<div class="ic-grp"><div class="ic-grp-h" style="color:${JC.federal.fill}">Federal (${fed.length})</div><ul>${fed.map(s=>`<li>${nodeMap[s].name}</li>`).join('')}</ul></div>`:''}
+    ${st.length?`<div class="ic-grp"><div class="ic-grp-h" style="color:${JC.state.fill}">State (${st.length})</div><ul>${st.map(s=>`<li>${nodeMap[s].name}</li>`).join('')}</ul></div>`:''}
+    ${loc.length?`<div class="ic-grp"><div class="ic-grp-h" style="color:${JC.local.fill}">Local (${loc.length})</div><ul>${loc.map(s=>`<li>${nodeMap[s].name}</li>`).join('')}</ul></div>`:''}`;
+  document.getElementById('info-panel').classList.add('visible');
+}
+function hideInfo(){document.getElementById('info-panel').classList.remove('visible')}
+
+// ═══════════════════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════════════════
+function showTip(e,n){
+  const t=document.getElementById('tip');const u=JOURNEYS.filter(j=>j.steps.includes(n.id)).length;
+  t.innerHTML=`<strong>${n.name}</strong><br><span style="color:${JC[n.jurisdiction].fill}">${n.jurisdiction[0].toUpperCase()+n.jurisdiction.slice(1)}</span> &middot; ${u} of ${JOURNEYS.length} journeys`;
+  t.classList.add('visible');const r=wrap.getBoundingClientRect();
+  t.style.left=(e.clientX-r.left+12)+'px';t.style.top=(e.clientY-r.top-10)+'px';
+}
+function hideTip(){document.getElementById('tip').classList.remove('visible')}
+
+// ═══════════════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════════════
+document.getElementById('btn-play').addEventListener('click',togglePlay);
+document.getElementById('btn-network').addEventListener('click',toggleNetwork);
+document.getElementById('sel-speed').addEventListener('change',e=>{S.speed=+e.target.value});
+svg.on('click',e=>{if((e.target===svg.node()||e.target.tagName==='rect')&&!S.playing)deselect()});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){if(S.playing)togglePlay();if(S.network)toggleNetwork();deselect()}
+  if(e.key===' '){e.preventDefault();togglePlay()}
+});
+
+// ═══════════════════════════════════════════════════════
+// INIT — load data then boot
+// ═══════════════════════════════════════════════════════
+// Try external JSON first (GitHub Pages), fall back to inline data (artifact/standalone)
+function boot(data){
+  JURISDICTIONS=data.jurisdictions;
+  PLC_NODES=data.plcNodes;
+  CATS=data.categories;
+  JOURNEYS=data.journeys;
+  PLC_NODES.forEach(n=>nodeMap[n.id]={...n});
+  CATS.forEach(c=>catName[c.id]=c.name);
+  document.getElementById('landing-stats').innerHTML=`
+    <div><div class="sn" style="color:${JC.federal.fill}">${JOURNEYS.length}</div><div class="sl">Journeys</div></div>
+    <div><div class="sn" style="color:${JC.state.fill}">${PLC_NODES.length}</div><div class="sl">PLC Types</div></div>
+    <div><div class="sn" style="color:${JC.local.fill}">3</div><div class="sl">Jurisdictions</div></div>`;
+  buildSidebar();
+  window.addEventListener('resize',resize);
+  resize();
+}
+fetch('data/journeys.json')
+  .then(r=>{if(!r.ok)throw new Error();return r.json()})
+  .then(boot)
+  .catch(()=>{
+    // Fallback: read inline data embedded in the HTML
+    const el=document.getElementById('inline-data');
+    if(el){try{boot(JSON.parse(el.textContent))}catch(e){showLoadError(e)}}
+    else showLoadError(new Error('No data source'));
+  });
+function showLoadError(e){
+  document.getElementById('landing').innerHTML=`<h2 style="color:#d83933">Failed to load data</h2><p>${e.message}</p>`;
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@uswds/uswds@3.13.0/dist/js/uswds.min.js" async></script>
+</body>
+</html>

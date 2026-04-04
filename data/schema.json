@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cross-Jurisdiction Journey Data",
+  "description": "Schema for data/journeys.json — the canonical data source for the Journey Visualizer.",
+  "type": "object",
+  "required": ["jurisdictions", "categories", "plcNodes", "journeys"],
+  "additionalProperties": false,
+  "properties": {
+    "jurisdictions": {
+      "type": "array",
+      "description": "The three government levels. Should always be exactly 3.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": ["federal", "state", "local"],
+            "description": "Jurisdiction identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          }
+        }
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "categories": {
+      "type": "array",
+      "description": "Journey grouping categories for the sidebar.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Category identifier (lowercase, underscores)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name shown in sidebar"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "plcNodes": {
+      "type": "array",
+      "description": "Permit/License/Compliance types — the nodes in the visualization.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "jurisdiction"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Node identifier (lowercase, underscores). Referenced by journey steps."
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name shown on the node in the visualization."
+          },
+          "jurisdiction": {
+            "type": "string",
+            "enum": ["federal", "state", "local"],
+            "description": "Which government level administers this PLC type."
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "journeys": {
+      "type": "array",
+      "description": "User journeys — each represents a goal that requires multiple PLC steps.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "cat", "steps"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Journey identifier (lowercase, underscores)."
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name shown in the sidebar and info card."
+          },
+          "cat": {
+            "type": "string",
+            "description": "Category ID. Must reference a valid category."
+          },
+          "steps": {
+            "type": "array",
+            "description": "Ordered array of PLC node IDs. Each must reference a valid plcNode.",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        }
+      },
+      "minItems": 1
+    }
+  }
+}

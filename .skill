@@ -1,0 +1,22 @@
+name: cross-jurisdiction-journey-visualizer
+description: >
+  Animated data visualization showing how business, professional, and civic
+  journeys flow through federal, state, and local government jurisdictions.
+  114 journeys across 15 categories, 61 PLC node types, 3 jurisdiction levels.
+  Built with USWDS v3 + D3.js as a static single-page app for GitHub Pages.
+tags:
+  - catalyst
+  - permitting
+  - licensing
+  - visualization
+  - d3js
+  - uswds
+  - government
+  - stakeholder-communication
+stack:
+  - uswds-v3
+  - d3js-v7
+  - vanilla-js
+  - static-html
+deploy: github-pages
+entry: index.html
