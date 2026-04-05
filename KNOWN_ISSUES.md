@@ -2,26 +2,6 @@
 
 ## Active Issues
 
-### USWDS Accordion Replaced with Manual Toggles
-**Status:** Workaround in place
-**Impact:** Low (visual only)
-
-The USWDS `usa-accordion` component was originally used for the sidebar category expand/collapse. The accordion button's CSS pseudo-element (`::before`) that renders the `+`/`-` icon conflicted with the compact sidebar layout — it overlapped content and was unclickable at small padding sizes.
-
-**Workaround:** Replaced with plain `<button class="cat-toggle">` elements with text chevrons (`▸`/`▾`). Manual `aria-expanded` + `hidden` toggling. Functionally identical, fully accessible.
-
-**To revisit:** If USWDS is eventually loaded via npm with Sass compilation, the accordion padding variables (`$theme-accordion-button-padding`) could be customized to fix the spacing. Not worth it for CDN usage.
-
-### USWDS CSS Overhead (510KB)
-**Status:** Accepted tradeoff
-**Impact:** Performance (first load only)
-
-The full USWDS 3.13.0 CSS is loaded from CDN (510KB minified). Only ~5% of the component styles are actually used (header, sidenav, card, button, select, input). The rest is dead CSS.
-
-**Why:** Using USWDS from CDN means no build step (GitHub Pages constraint). Sass compilation would allow tree-shaking.
-
-**Mitigation:** The CSS is served gzipped from CDN (~80KB transfer) and caches on repeat visits. For a stakeholder presentation tool, this is acceptable.
-
 ### Inline Data Duplication
 **Status:** By design
 **Impact:** File size (index.html is 53KB instead of ~28KB)

@@ -7,10 +7,53 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uswds/uswds@3.13.0/dist/css/uswds.min.css">
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <style>
-/* ── Design tokens (USWDS-aligned) ── */
+/* ── Base reset (replaces USWDS CDN) ── */
+*,*::before,*::after{box-sizing:border-box}
+a{color:var(--color-primary)}
+button{cursor:pointer}
+*:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+
+/* ── Header (usa-header) ── */
+.usa-header{background:var(--color-white);border-bottom:1px solid var(--color-base-lighter)}
+.usa-nav-container{padding:8px 16px}
+.usa-navbar{display:flex;align-items:center}
+.usa-logo{margin:0}
+.usa-logo__text{font-style:normal;font-size:.88rem}
+.usa-logo__text a{color:var(--color-ink);text-decoration:none}
+
+/* ── Buttons (usa-button) ── */
+.usa-button{display:inline-block;background:var(--color-primary);color:var(--color-white);border:0;border-radius:4px;padding:10px 20px;font-size:.93rem;font-weight:700;text-align:center;line-height:1;appearance:none}
+.usa-button:hover{background:#1a4480}
+.usa-button--outline{background:transparent;color:var(--color-primary);box-shadow:inset 0 0 0 2px var(--color-primary)}
+.usa-button--outline:hover{background:rgba(0,94,162,.05);color:#1a4480;box-shadow:inset 0 0 0 2px #1a4480}
+.usa-button--secondary{background:#d83933;color:var(--color-white);box-shadow:none}
+.usa-button--secondary:hover{background:#b50909}
+
+/* ── Select (usa-select) ── */
+.usa-select{border:1px solid var(--color-ink);border-radius:0;padding:8px 32px 8px 8px;font-size:.93rem;background-color:var(--color-white);appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231b1b1b' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:12px}
+
+/* ── Input (usa-input) ── */
+.usa-input{border:1px solid var(--color-ink);border-radius:0;padding:8px;font-size:.93rem;width:100%;background:var(--color-white)}
+.usa-input:focus{outline:2px solid var(--color-primary);outline-offset:0}
+
+/* ── Card (usa-card) ── */
+.usa-card{margin:0}
+.usa-card__container{background:var(--color-white);border:1px solid var(--color-base-lighter);border-radius:8px;overflow:hidden}
+.usa-card__header{padding:12px 16px 4px}
+.usa-card__heading{font-size:1rem;font-family:var(--font-serif);margin:0;font-weight:700}
+.usa-card__body{padding:4px 16px 16px;font-size:.85rem}
+
+/* ── Sidenav (usa-sidenav) ── */
+.usa-sidenav{list-style:none;padding:0;margin:0}
+.usa-sidenav a{display:block;padding:8px 16px;color:var(--color-ink);text-decoration:none}
+.usa-sidenav a:hover{background:var(--color-base-lightest)}
+.usa-sidenav a.usa-current{color:var(--color-primary);font-weight:700;border-left:4px solid var(--color-primary);background:var(--color-primary-lighter)}
+.usa-sidenav__item{border:none;list-style:none}
+.usa-sidenav__sublist{list-style:none;padding:0;margin:0}
+
+/* ── Design tokens ── */
 :root {
   --color-white: #ffffff;
   --color-base-lightest: #f0f0f0;
@@ -51,16 +94,16 @@ body .ic-cat,
 body .ic-stat,
 body .ic-grp-h,
 body .net-stats,
-body .header-ctrls a{font-family:var(--font-sans)!important}
+body .header-ctrls a{font-family:var(--font-sans)}
 .app-wrap{display:flex;flex:1;overflow:hidden}
 .app-body{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column}
 
 /* ── Header tweaks ── */
 .usa-header--basic .usa-nav-container{display:flex;align-items:center;justify-content:space-between;max-width:none}
-.usa-header--basic .usa-navbar{display:flex!important;align-items:center!important;min-height:0!important;padding:0!important}
-.usa-header--basic .usa-logo{margin:0!important}
-.usa-header--basic .usa-logo__text{font-style:normal!important;font-size:.88rem!important;font-family:var(--font-serif)!important}
-.usa-header--basic .usa-logo__text a{font-family:var(--font-serif)!important;text-decoration:none}
+.usa-header--basic .usa-navbar{display:flex;align-items:center;min-height:0;padding:0}
+.usa-header--basic .usa-logo{margin:0}
+.usa-header--basic .usa-logo__text{font-style:normal;font-size:1rem;font-family:var(--font-serif)}
+.usa-header--basic .usa-logo__text a{font-family:var(--font-serif);text-decoration:none}
 .header-ctrls{display:flex;gap:8px;align-items:center;padding:8px 0}
 .header-ctrls .usa-button{font-size:.78rem;padding:5px 14px;margin:0}
 .header-ctrls .usa-select{font-size:.78rem;padding:3px 24px 3px 8px;height:auto;margin:0;max-width:100px}
@@ -111,8 +154,8 @@ body .header-ctrls a{font-family:var(--font-sans)!important}
 /* ── Landing ── */
 .landing{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;transition:opacity .4s}
 .landing.hidden{opacity:0}
-.landing h2{font-size:1.3rem;font-weight:300;color:var(--color-base);margin:0 0 6px}
-.landing p{font-size:.82rem;color:var(--color-base);margin:0;font-family:var(--font-serif)}
+.landing h2{font-size:1.3rem;font-weight:400;color:var(--color-ink);margin:0 0 4px;font-family:var(--font-serif)}
+.landing p{font-size:.8rem;color:var(--color-base);margin:0;font-family:var(--font-sans)}
 .landing .stats{display:flex;gap:20px;justify-content:center;margin-top:18px}
 .landing .sn{font-size:1.8rem;font-weight:800;line-height:1}
 .landing .sl{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--color-base);margin-top:3px}
@@ -131,7 +174,9 @@ body .header-ctrls a{font-family:var(--font-sans)!important}
 .ic-grp{margin-bottom:5px}
 .ic-grp-h{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px}
 .ic-grp ul{list-style:none;padding:0;margin:0}
-.ic-grp li{font-size:.75rem;padding:1px 0;color:var(--color-base);font-family:var(--font-sans)!important}
+.ic-grp li{font-size:.75rem;padding:1px 0;color:var(--color-base);font-family:var(--font-sans)}
+.ic-close{display:none;align-items:center;justify-content:center;border:none;background:none;font-size:1.3rem;line-height:1;color:var(--color-base);cursor:pointer;padding:2px 6px;border-radius:4px;flex-shrink:0}
+.ic-close:hover{background:var(--color-base-lightest);color:var(--color-ink)}
 
 /* ── Network stats ── */
 .net-stats{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:var(--color-white);border:1px solid var(--color-base-lighter);border-radius:6px;padding:8px 20px;display:flex;gap:24px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:10;box-shadow:0 4px 16px var(--shadow-light)}
@@ -151,15 +196,12 @@ body .header-ctrls a{font-family:var(--font-sans)!important}
 
 /* ── Mobile ── */
 @media(max-width:768px){
-  /* Header */
-  .usa-header--basic .usa-nav-container{flex-wrap:wrap;padding:6px 12px!important}
-  .usa-header--basic .usa-navbar{flex:1;min-width:0}
-  .usa-header--basic .usa-logo__text{font-size:.78rem!important}
-  .header-ctrls{width:100%;justify-content:flex-start;gap:4px;padding:4px 0 2px;border-top:1px solid var(--color-base-lighter);overflow-x:auto}
-  .header-ctrls .usa-button{font-size:.7rem;padding:4px 8px;white-space:nowrap}
-  .header-ctrls .usa-select{font-size:.7rem;max-width:76px}
-  .header-ctrls .gh-link{display:none!important}
-  .mobile-menu-btn{display:flex!important}
+  /* Header: single compact row */
+  .usa-header--basic .usa-nav-container{flex-wrap:nowrap;padding:6px 12px!important}
+  .usa-header--basic .usa-navbar{flex:1;min-width:0;display:flex!important;align-items:center!important;justify-content:space-between!important;width:100%}
+  .usa-header--basic .usa-logo__text{font-size:.68rem!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .header-ctrls{display:none!important}
+  .mobile-menu-btn{display:flex!important;margin-left:auto}
   .sidebar-grip{display:none!important}
 
   /* Sidebar as overlay drawer */
@@ -169,22 +211,30 @@ body .header-ctrls a{font-family:var(--font-sans)!important}
   .app-sidebar.collapsed{left:-85vw!important;width:85vw!important;max-width:320px;height:100vh!important}
   .sidebar-close{display:flex!important}
 
-  /* Info card as top banner */
-  .info-card{top:0;right:0;left:0;width:100%;border-radius:0;transform:translateY(-8px)}
+  /* Info card as bottom sheet */
+  .info-card{top:auto;bottom:0;right:0;left:0;width:100%;border-radius:12px 12px 0 0;transform:translateY(100%);max-height:45vh;overflow:hidden}
   .info-card.visible{transform:translateY(0)}
-  .info-card .usa-card__container{border-radius:0!important;box-shadow:0 2px 8px var(--shadow-light)}
-  .info-card .usa-card__body{max-height:35vh;overflow-y:auto}
+  .info-card .usa-card__container{border-radius:12px 12px 0 0!important;box-shadow:0 -2px 12px var(--shadow-light)}
+  .info-card .usa-card__header{padding:8px 12px 2px}
+  .info-card .usa-card__heading{font-size:.82rem}
+  .info-card .usa-card__body{max-height:28vh;overflow-y:auto;padding:4px 12px 12px}
   .ic-close{display:flex!important}
+  .ic-stats{display:inline-flex;gap:8px;margin-bottom:4px}
+  .ic-stat{flex:none;padding:3px 10px}
+  .ic-stat .n{font-size:.85rem}
+  .ic-stat .l{font-size:.5rem}
+  .ic-grp{margin-bottom:3px}
+  .ic-grp li{font-size:.7rem;padding:0}
 
-  /* Network stats wrap */
+  /* Network stats */
   .net-stats{flex-wrap:wrap;gap:10px 14px;padding:6px 12px;max-width:90vw}
 
-  /* Landing smaller */
+  /* Landing */
   .landing h2{font-size:1.05rem}
   .landing .stats{gap:12px}
   .landing .sn{font-size:1.4rem}
 
-  /* Tooltip at bottom center */
+  /* Tooltip */
   .tip{left:50%!important;bottom:16px!important;top:auto!important;transform:translateX(-50%);max-width:85vw}
 }
 </style>
@@ -192,18 +242,17 @@ body .header-ctrls a{font-family:var(--font-sans)!important}
 <body>
 
 <!-- ═══ HEADER (usa-header--basic) ═══ -->
-<div class="usa-overlay"></div>
 <header class="usa-header usa-header--basic" role="banner">
   <div class="usa-nav-container">
     <div class="usa-navbar">
       <div class="usa-logo">
         <em class="usa-logo__text">
-          <a href="/" title="Catalyst">Catalyst <span style="font-weight:400;color:var(--color-base)">&middot; Permitting & Licensing Journey Viz</span></a>
+          <a href="/" title="Catalyst">Catalyst <span class="logo-subtitle" style="font-weight:400;color:var(--color-base)">&middot; Permitting & Licensing Journey Viz</span></a>
         </em>
       </div>
+      <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open journey list" title="Open journey list"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     </div>
     <div class="header-ctrls">
-      <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open journey list" title="Open journey list"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
       <a class="gh-link" href="https://github.com/saz33m1/permitting-licensing-journey-viz" target="_blank" rel="noopener" style="font-size:.78rem;color:var(--color-base);text-decoration:none;display:flex;align-items:center;gap:4px" title="View on GitHub"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
       <button class="usa-button usa-button--outline" id="btn-play">&#9654; Auto-Play</button>
       <button class="usa-button usa-button--outline" id="btn-network">Show Network</button>
@@ -241,7 +290,7 @@ body .header-ctrls a{font-family:var(--font-sans)!important}
     </div>
     <div class="info-card" id="info-panel">
       <div class="usa-card"><div class="usa-card__container">
-        <div class="usa-card__header"><h3 class="usa-card__heading" id="info-title"></h3></div>
+        <div class="usa-card__header" style="display:flex;align-items:center;justify-content:space-between"><h3 class="usa-card__heading" id="info-title"></h3><button class="ic-close" id="ic-close" aria-label="Close info panel" title="Close">&times;</button></div>
         <div class="usa-card__body" id="info-body"></div>
       </div></div>
     </div>
@@ -507,7 +556,7 @@ function renderBase(){
   JURISDICTIONS.forEach(jur=>{
     const b=S.bands[jur.id];const g=svg.append('g').attr('class',`band-${jur.id}`);
     g.append('rect').attr('x',0).attr('y',b.y).attr('width',S.W).attr('height',b.h).attr('fill',JC[jur.id].bg);
-    g.append('text').attr('x',14).attr('y',b.y+16).attr('font-size','10px').attr('font-weight',700).attr('fill',JC[jur.id].fill).attr('opacity',.45).attr('letter-spacing','.1em').attr('font-family',FONT_SANS).text(jur.name.toUpperCase());
+    g.append('text').attr('x',14).attr('y',b.y+16).attr('font-size','10px').attr('font-weight',700).attr('fill',JC[jur.id].fill).attr('opacity',.65).attr('letter-spacing','.1em').attr('font-family',FONT_SANS).text(jur.name.toUpperCase());
   });
   svg.append('g').attr('id','conns');svg.append('g').attr('id','particles');svg.append('g').attr('id','nodes');
 }
@@ -521,7 +570,7 @@ function renderJourney(j,anim){
   const active=j.steps.map(id=>nodeMap[id]).filter(Boolean);
   const grp={federal:[],state:[],local:[]};
   active.forEach(n=>grp[n.jurisdiction].push(n));
-  const sf=Math.min(1,S.W/700);
+  const sf=Math.max(.7,Math.min(1,S.W/700));
   const cvs=document.createElement('canvas'),ctx=cvs.getContext('2d');
   ctx.font=(12*sf)+'px '+FONT_SANS;
   active.forEach(n=>{n._tw=ctx.measureText(n.name).width;n._nw=n._tw+20*sf;n._nh=28*sf});
@@ -582,7 +631,7 @@ function showNetwork(){
   const freq={};PLC_NODES.forEach(n=>freq[n.id]=0);JOURNEYS.forEach(j=>j.steps.forEach(s=>freq[s]++));
   const mf=Math.max(...Object.values(freq));
   const grp={federal:[],state:[],local:[]};PLC_NODES.forEach(n=>{n._freq=freq[n.id];grp[n.jurisdiction].push(n)});
-  const nsf=Math.min(1,S.W/700);
+  const nsf=Math.max(.7,Math.min(1,S.W/700));
   const cvs=document.createElement('canvas'),ctx=cvs.getContext('2d');ctx.font=(9.5*nsf)+'px '+FONT_SANS;
   const GAP=10*nsf;
   Object.entries(grp).forEach(([jur,ns])=>{
@@ -780,6 +829,27 @@ document.getElementById('mobile-menu-btn').addEventListener('click',()=>{
 });
 document.getElementById('sidebar-backdrop').addEventListener('click',closeMobileSidebar);
 document.getElementById('sidebar-close').addEventListener('click',closeMobileSidebar);
+document.getElementById('ic-close').addEventListener('click',function(){hideInfo()});
+// Move controls between header and sidebar based on viewport
+function relocateControls(){
+  const mobile=isMobile();
+  const existing=document.querySelector('.sidebar-ctrls');
+  const btnPlay=document.getElementById('btn-play');
+  const btnNet=document.getElementById('btn-network');
+  const selSpd=document.getElementById('sel-speed');
+  if(mobile&&!existing){
+    const ctrlWrap=document.createElement('div');
+    ctrlWrap.className='sidebar-ctrls';
+    ctrlWrap.style.cssText='padding:8px 12px;border-bottom:1px solid var(--color-base-lighter);display:flex;gap:6px;flex-wrap:wrap';
+    ctrlWrap.appendChild(btnPlay);ctrlWrap.appendChild(btnNet);ctrlWrap.appendChild(selSpd);
+    document.getElementById('app-sidebar').querySelector('.sidebar-top').after(ctrlWrap);
+  }else if(!mobile&&existing){
+    const hdr=document.querySelector('.header-ctrls');
+    hdr.appendChild(btnPlay);hdr.appendChild(btnNet);hdr.appendChild(selSpd);
+    existing.remove();
+  }
+}
+relocateControls();
 svg.on('click',e=>{if((e.target===svg.node()||e.target.tagName==='rect')&&!S.playing)deselect()});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){if(S.playing)togglePlay();if(S.network)toggleNetwork();deselect()}
@@ -805,6 +875,7 @@ function boot(data){
   window.addEventListener('resize',()=>{
     if(!isMobile()){closeMobileSidebar()}
     else{document.getElementById('app-sidebar').classList.remove('collapsed')}
+    relocateControls();
     resize();
   });
   resize();
@@ -822,6 +893,5 @@ function showLoadError(e){
   document.getElementById('landing').innerHTML=`<h2 style="color:var(--color-error)">Failed to load data</h2><p>${e.message}</p>`;
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@uswds/uswds@3.13.0/dist/js/uswds.min.js" async></script>
 </body>
 </html>

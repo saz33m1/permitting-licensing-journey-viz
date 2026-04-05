@@ -12,12 +12,12 @@ Part of **Catalyst** — an open-source Permitting & Licensing platform for stat
 
 | Layer | Tool | Version | Loaded via |
 |-------|------|---------|-----------|
-| UI framework | USWDS (U.S. Web Design System) | 3.13.0 | CDN |
+| UI framework | Custom CSS (USWDS-inspired tokens & class names) | — | Inline |
 | Visualization | D3.js | 7 | CDN |
 | Language | Vanilla JavaScript | ES6+ | Inline |
 | Deployment | Static HTML | — | GitHub Pages |
 
-**No build step.** No npm, no bundler, no framework. The app is a single `index.html` that loads two CDN scripts and one local JSON file.
+**No build step.** No npm, no bundler, no framework. The app is a single `index.html` that loads one CDN script (D3.js) and one local JSON file.
 
 ## File Manifest
 
