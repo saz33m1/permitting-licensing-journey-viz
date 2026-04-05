@@ -4,85 +4,189 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Permitting & Licensing Journey Viz | Catalyst</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uswds/uswds@3.13.0/dist/css/uswds.min.css">
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <style>
+/* ── Design tokens (USWDS-aligned) ── */
+:root {
+  --color-white: #ffffff;
+  --color-base-lightest: #f0f0f0;
+  --color-base-lighter: #dfe1e2;
+  --color-base-light: #a9aeb1;
+  --color-base: #71767a;
+  --color-base-dark: #565c65;
+  --color-ink: #1b1b1b;
+  --color-primary: #005ea2;
+  --color-primary-lighter: #d9e8f6;
+  --color-error: #d83933;
+  --shadow-light: rgba(0,0,0,.08);
+  --shadow-medium: rgba(0,0,0,.2);
+  --jc-federal-fill: #1a4480;
+  --jc-federal-light: #d9e8f6;
+  --jc-federal-bg: rgba(26,68,128,.04);
+  --jc-state-fill: #146947;
+  --jc-state-light: #dbf0e0;
+  --jc-state-bg: rgba(20,105,71,.04);
+  --jc-local-fill: #a23e00;
+  --jc-local-light: #fce2cc;
+  --jc-local-bg: rgba(162,62,0,.04);
+  --font-sans: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Merriweather', Georgia, 'Times New Roman', serif;
+}
+
 /* ── App layout (full viewport, USWDS doesn't cover this) ── */
 html,body{height:100%;margin:0;overflow:hidden}
-body{display:flex;flex-direction:column;background:#f0f0f0}
-.app-body{display:flex;flex:1;overflow:hidden}
+body{display:flex;flex-direction:column;background:var(--color-base-lightest);font-family:var(--font-sans)}
+body .usa-sidenav a,
+body .usa-button,
+body .usa-select,
+body .usa-input,
+body .usa-header,
+body .usa-card__heading,
+body .usa-card__body,
+body .ic-cat,
+body .ic-stat,
+body .ic-grp-h,
+body .net-stats,
+body .header-ctrls a{font-family:var(--font-sans)!important}
+.app-wrap{display:flex;flex:1;overflow:hidden}
+.app-body{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column}
 
 /* ── Header tweaks ── */
 .usa-header--basic .usa-nav-container{display:flex;align-items:center;justify-content:space-between;max-width:none}
+.usa-header--basic .usa-navbar{display:flex!important;align-items:center!important;min-height:0!important;padding:0!important}
+.usa-header--basic .usa-logo{margin:0!important}
+.usa-header--basic .usa-logo__text{font-style:normal!important;font-size:.88rem!important;font-family:var(--font-serif)!important}
+.usa-header--basic .usa-logo__text a{font-family:var(--font-serif)!important;text-decoration:none}
 .header-ctrls{display:flex;gap:8px;align-items:center;padding:8px 0}
 .header-ctrls .usa-button{font-size:.78rem;padding:5px 14px;margin:0}
 .header-ctrls .usa-select{font-size:.78rem;padding:3px 24px 3px 8px;height:auto;margin:0;max-width:100px}
 
 /* ── Sidebar ── */
-.app-sidebar{width:300px;flex-shrink:0;background:#fff;border-right:1px solid #dfe1e2;overflow-y:auto;display:flex;flex-direction:column}
+.app-sidebar{width:300px;flex-shrink:0;background:var(--color-white);border-right:1px solid var(--color-base-lighter);overflow-y:auto;display:flex;flex-direction:column;transition:width .2s ease,min-width .2s ease}
+.app-sidebar.collapsed{width:0!important;min-width:0!important;flex-basis:0!important;overflow:hidden;border-right:none;padding:0}
+.sidebar-grip{width:12px;flex-shrink:0;background:var(--color-base-lightest);border-right:1px solid var(--color-base-lighter);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.sidebar-grip:hover{background:var(--color-base-lighter)}
+.sidebar-grip:focus-visible{outline:2px solid var(--color-primary);outline-offset:-2px}
+.grip-dots{display:flex;flex-direction:column;gap:3px}
+.grip-dots::before,.grip-dots::after{content:'';display:block;width:4px;height:4px;border-radius:50%;background:var(--color-base-light)}
+.mobile-menu-btn{display:none;align-items:center;justify-content:center;padding:4px;color:var(--color-base-dark);cursor:pointer;border:1px solid var(--color-base-lighter);background:var(--color-white);border-radius:4px}
+.mobile-menu-btn:hover{background:var(--color-base-lightest);color:var(--color-ink)}
 .app-sidebar::-webkit-scrollbar{width:5px}
-.app-sidebar::-webkit-scrollbar-thumb{background:#dfe1e2;border-radius:3px}
-.sidebar-top{padding:8px 12px;border-bottom:1px solid #dfe1e2;display:flex;align-items:center;gap:8px}
+.app-sidebar::-webkit-scrollbar-thumb{background:var(--color-base-lighter);border-radius:3px}
+.sidebar-close{display:none;padding:4px 6px;font-size:1.2rem;line-height:1;border:none;background:none;color:var(--color-base);cursor:pointer;border-radius:4px}
+.sidebar-close:hover{background:var(--color-base-lightest);color:var(--color-ink)}
+.sidebar-backdrop{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:199}
+.sidebar-backdrop.visible{display:block}
+.sidebar-top{padding:8px 12px;border-bottom:1px solid var(--color-base-lighter);display:flex;align-items:center;gap:8px}
 .sidebar-top .usa-input{font-size:.82rem;padding:6px 10px;margin:0;flex:1}
-.sidebar-top .toggle-link{font-size:.68rem;color:#005ea2;cursor:pointer;white-space:nowrap;text-decoration:underline;flex-shrink:0}
+.sidebar-top .toggle-link{font-size:.68rem;color:var(--color-primary);cursor:pointer;white-space:nowrap;text-decoration:underline;flex-shrink:0}
 .sidebar-body{flex:1;overflow-y:auto}
 
 /* Sidenav with category toggles */
 .sidebar-body .usa-sidenav{border:none}
 .sidebar-body .usa-sidenav a{font-size:.8rem;padding:5px 12px 5px 20px;border:none}
-.sidebar-body .usa-sidenav a:hover{background:#f0f0f0}
-.sidebar-body .usa-sidenav a.usa-current{color:#005ea2;font-weight:600;border-left:3px solid #005ea2;background:#e7f2f8}
+.sidebar-body .usa-sidenav a:hover{background:var(--color-base-lightest)}
+.sidebar-body .usa-sidenav a.usa-current{color:var(--color-primary);font-weight:600;border-left:3px solid var(--color-primary);background:var(--color-primary-lighter)}
 .sidebar-body .usa-sidenav__item{border:none}
 .sidebar-body .usa-sidenav__sublist{border:none}
-.cat-toggle{display:flex;align-items:center;width:100%;padding:8px 12px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#71767a;background:#fafafa;border:none;border-bottom:1px solid #f0f0f0;cursor:pointer;text-align:left;font-family:inherit}
-.cat-toggle:hover{background:#f0f0f0}
+.cat-toggle{display:flex;align-items:center;width:100%;padding:8px 12px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--color-base-dark);background:var(--color-base-lightest);border:none;border-bottom:1px solid var(--color-base-lightest);cursor:pointer;text-align:left;font-family:var(--font-sans)}
+.cat-toggle:hover{background:var(--color-base-lighter)}
 .cat-toggle .chevron{margin-right:6px;font-size:.6rem;transition:transform .15s;display:inline-block;width:10px}
 .cat-toggle[aria-expanded=false] .chevron{transform:rotate(0deg)}
 .cat-toggle[aria-expanded=true] .chevron{transform:rotate(90deg)}
-.cat-toggle .cat-count{margin-left:auto;color:#a9aeb1;font-weight:500}
+.cat-toggle .cat-count{margin-left:auto;color:var(--color-base);font-weight:500}
 .j-meta{float:right;display:flex;align-items:center;gap:5px}
 .j-dots{display:flex;gap:2px}
-.j-dot{width:5px;height:5px;border-radius:50%;display:inline-block;border:1px solid #dfe1e2}
-.j-count{font-size:.65rem;color:#71767a}
+.j-dot{width:5px;height:5px;border-radius:50%;display:inline-block;border:1px solid var(--color-base-lighter)}
+.j-count{font-size:.65rem;color:var(--color-base)}
 
 /* ── Viz canvas ── */
-.viz-wrap{flex:1;position:relative;background:#fff;overflow:hidden}
+.viz-wrap{flex:1;position:relative;background:var(--color-white);overflow:hidden}
 .viz-wrap svg{display:block}
 
 /* ── Landing ── */
 .landing{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;transition:opacity .4s}
 .landing.hidden{opacity:0}
-.landing h2{font-size:1.3rem;font-weight:300;color:#71767a;margin:0 0 6px}
-.landing p{font-size:.82rem;color:#a9aeb1;margin:0}
+.landing h2{font-size:1.3rem;font-weight:300;color:var(--color-base);margin:0 0 6px}
+.landing p{font-size:.82rem;color:var(--color-base);margin:0;font-family:var(--font-serif)}
 .landing .stats{display:flex;gap:20px;justify-content:center;margin-top:18px}
 .landing .sn{font-size:1.8rem;font-weight:800;line-height:1}
-.landing .sl{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:#a9aeb1;margin-top:3px}
+.landing .sl{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--color-base);margin-top:3px}
 
 /* ── Info card ── */
-.info-card{position:absolute;top:10px;right:10px;width:240px;opacity:0;transform:translateX(8px);transition:opacity .25s,transform .25s;pointer-events:none;z-index:10}
+.info-card{position:absolute;top:10px;right:10px;width:min(240px,calc(100% - 20px));max-height:calc(100% - 20px);overflow-y:auto;opacity:0;transform:translateX(8px);transition:opacity .25s,transform .25s;pointer-events:none;z-index:10}
 .info-card.visible{opacity:1;transform:translateX(0);pointer-events:auto}
-.info-card .usa-card__container{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.info-card .usa-card__container{box-shadow:0 4px 16px var(--shadow-light)}
 .info-card .usa-card__header{padding-bottom:2px}
 .info-card .usa-card__heading{font-size:.9rem}
-.ic-cat{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#005ea2;margin-bottom:6px}
+.ic-cat{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-primary);margin-bottom:6px}
 .ic-stats{display:flex;gap:6px;margin-bottom:8px}
-.ic-stat{flex:1;text-align:center;padding:5px;background:#f0f0f0;border-radius:4px}
+.ic-stat{flex:1;text-align:center;padding:5px;background:var(--color-base-lightest);border-radius:4px}
 .ic-stat .n{font-size:1.1rem;font-weight:800}
-.ic-stat .l{font-size:.55rem;text-transform:uppercase;letter-spacing:.04em;color:#71767a}
+.ic-stat .l{font-size:.55rem;text-transform:uppercase;letter-spacing:.04em;color:var(--color-base)}
 .ic-grp{margin-bottom:5px}
 .ic-grp-h{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px}
 .ic-grp ul{list-style:none;padding:0;margin:0}
-.ic-grp li{font-size:.75rem;padding:1px 0;color:#71767a}
+.ic-grp li{font-size:.75rem;padding:1px 0;color:var(--color-base);font-family:var(--font-sans)!important}
 
 /* ── Network stats ── */
-.net-stats{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #dfe1e2;border-radius:6px;padding:8px 20px;display:flex;gap:24px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.net-stats{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:var(--color-white);border:1px solid var(--color-base-lighter);border-radius:6px;padding:8px 20px;display:flex;gap:24px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:10;box-shadow:0 4px 16px var(--shadow-light)}
 .net-stats.visible{opacity:1}
 .ns-v{font-size:1rem;font-weight:800;text-align:center}
-.ns-l{font-size:.55rem;text-transform:uppercase;letter-spacing:.05em;color:#71767a;text-align:center}
+.ns-l{font-size:.55rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-base);text-align:center}
 
 /* ── Tooltip ── */
-.tip{position:absolute;background:#1b1b1b;color:#fff;border-radius:4px;padding:4px 9px;font-size:.7rem;pointer-events:none;opacity:0;transition:opacity .12s;z-index:20;max-width:220px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.tip{position:absolute;background:var(--color-ink);color:var(--color-white);border-radius:4px;padding:4px 9px;font-size:.7rem;pointer-events:none;opacity:0;transition:opacity .12s;z-index:20;max-width:220px;box-shadow:0 2px 8px var(--shadow-medium)}
 .tip.visible{opacity:1}
+
+/* ── Tablet ── */
+@media(max-width:1024px){
+  .app-sidebar{width:260px}
+  .info-card{width:min(200px,calc(100% - 20px))}
+}
+
+/* ── Mobile ── */
+@media(max-width:768px){
+  /* Header */
+  .usa-header--basic .usa-nav-container{flex-wrap:wrap;padding:6px 12px!important}
+  .usa-header--basic .usa-navbar{flex:1;min-width:0}
+  .usa-header--basic .usa-logo__text{font-size:.78rem!important}
+  .header-ctrls{width:100%;justify-content:flex-start;gap:4px;padding:4px 0 2px;border-top:1px solid var(--color-base-lighter);overflow-x:auto}
+  .header-ctrls .usa-button{font-size:.7rem;padding:4px 8px;white-space:nowrap}
+  .header-ctrls .usa-select{font-size:.7rem;max-width:76px}
+  .header-ctrls .gh-link{display:none!important}
+  .mobile-menu-btn{display:flex!important}
+  .sidebar-grip{display:none!important}
+
+  /* Sidebar as overlay drawer */
+  .app-wrap{overflow:visible!important}
+  .app-sidebar{position:fixed!important;top:0;left:-85vw!important;width:85vw!important;max-width:320px;height:100vh!important;z-index:200;transition:left .25s ease!important;box-shadow:none;flex-basis:auto!important;min-width:auto!important;overflow-y:auto!important;border-right:1px solid var(--color-base-lighter)!important;padding:0!important}
+  .app-sidebar.mobile-open{left:0!important;box-shadow:4px 0 20px rgba(0,0,0,.15)}
+  .app-sidebar.collapsed{left:-85vw!important;width:85vw!important;max-width:320px;height:100vh!important}
+  .sidebar-close{display:flex!important}
+
+  /* Info card as top banner */
+  .info-card{top:0;right:0;left:0;width:100%;border-radius:0;transform:translateY(-8px)}
+  .info-card.visible{transform:translateY(0)}
+  .info-card .usa-card__container{border-radius:0!important;box-shadow:0 2px 8px var(--shadow-light)}
+  .info-card .usa-card__body{max-height:35vh;overflow-y:auto}
+  .ic-close{display:flex!important}
+
+  /* Network stats wrap */
+  .net-stats{flex-wrap:wrap;gap:10px 14px;padding:6px 12px;max-width:90vw}
+
+  /* Landing smaller */
+  .landing h2{font-size:1.05rem}
+  .landing .stats{gap:12px}
+  .landing .sn{font-size:1.4rem}
+
+  /* Tooltip at bottom center */
+  .tip{left:50%!important;bottom:16px!important;top:auto!important;transform:translateX(-50%);max-width:85vw}
+}
 </style>
 </head>
 <body>
@@ -94,12 +198,13 @@ body{display:flex;flex-direction:column;background:#f0f0f0}
     <div class="usa-navbar">
       <div class="usa-logo">
         <em class="usa-logo__text">
-          <a href="/" title="Catalyst">Catalyst <span style="font-weight:400;color:#71767a">&middot; Permitting & Licensing Journey Viz</span></a>
+          <a href="/" title="Catalyst">Catalyst <span style="font-weight:400;color:var(--color-base)">&middot; Permitting & Licensing Journey Viz</span></a>
         </em>
       </div>
     </div>
     <div class="header-ctrls">
-      <a href="https://github.com/saz33m1/permitting-licensing-journey-viz" target="_blank" rel="noopener" style="font-size:.78rem;color:#71767a;text-decoration:none;display:flex;align-items:center;gap:4px" title="View on GitHub"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+      <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open journey list" title="Open journey list"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <a class="gh-link" href="https://github.com/saz33m1/permitting-licensing-journey-viz" target="_blank" rel="noopener" style="font-size:.78rem;color:var(--color-base);text-decoration:none;display:flex;align-items:center;gap:4px" title="View on GitHub"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
       <button class="usa-button usa-button--outline" id="btn-play">&#9654; Auto-Play</button>
       <button class="usa-button usa-button--outline" id="btn-network">Show Network</button>
       <select class="usa-select" id="sel-speed" aria-label="Animation speed">
@@ -112,16 +217,20 @@ body{display:flex;flex-direction:column;background:#f0f0f0}
 </header>
 
 <!-- ═══ BODY ═══ -->
-<div class="app-body">
-  <!-- Sidebar -->
-  <aside class="app-sidebar">
+<div class="app-wrap">
+  <aside class="app-sidebar" id="app-sidebar">
     <div class="sidebar-top">
+      <button class="sidebar-close" id="sidebar-close" aria-label="Close sidebar">&times;</button>
       <input class="usa-input" type="search" id="search" placeholder="Filter journeys..." aria-label="Filter journeys">
-      <span class="toggle-link" id="toggle-all">Collapse all</span>
+      <a class="toggle-link" id="toggle-all">Collapse all</a>
     </div>
     <div class="sidebar-body" id="sidebar-body"></div>
   </aside>
-
+  <div class="sidebar-grip" id="sidebar-grip" role="button" tabindex="0" aria-label="Toggle sidebar" title="Toggle sidebar">
+    <span class="grip-dots"></span>
+  </div>
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+  <div class="app-body">
   <!-- Visualization -->
   <div class="viz-wrap" id="viz-wrap">
     <svg id="viz" role="img" aria-label="Journey visualization across federal, state, and local jurisdictions"></svg>
@@ -139,6 +248,7 @@ body{display:flex;flex-direction:column;background:#f0f0f0}
     <div class="net-stats" id="net-stats"></div>
     <div class="tip" id="tip"></div>
   </div>
+</div>
 </div>
 
 <!-- Inline data fallback for standalone/artifact use. On GitHub Pages, data/journeys.json takes precedence. -->
@@ -345,13 +455,16 @@ body{display:flex;flex-direction:column;background:#f0f0f0}
 
 <script>
 // ═══════════════════════════════════════════════════════
-// COLORS — Federal (navy), State (green), Local (orange)
+// COLORS — read from CSS custom properties (USWDS tokens)
 // ═══════════════════════════════════════════════════════
+const _root = getComputedStyle(document.documentElement);
+const v = (n) => _root.getPropertyValue(n).trim();
 const JC = {
-  federal: { fill:'#1a4480', light:'#e1eaf4', bg:'rgba(26,68,128,.04)' },
-  state:   { fill:'#1b7742', light:'#daf0e3', bg:'rgba(27,119,66,.04)' },
-  local:   { fill:'#c05600', light:'#fce2cc', bg:'rgba(192,86,0,.04)' }
+  federal: { fill:v('--jc-federal-fill'), light:v('--jc-federal-light'), bg:v('--jc-federal-bg') },
+  state:   { fill:v('--jc-state-fill'),   light:v('--jc-state-light'),   bg:v('--jc-state-bg') },
+  local:   { fill:v('--jc-local-fill'),    light:v('--jc-local-light'),   bg:v('--jc-local-bg') }
 };
+const FONT_SANS = 'Public Sans, sans-serif';
 
 // ═══════════════════════════════════════════════════════
 // DATA — loaded from data/journeys.json
@@ -394,7 +507,7 @@ function renderBase(){
   JURISDICTIONS.forEach(jur=>{
     const b=S.bands[jur.id];const g=svg.append('g').attr('class',`band-${jur.id}`);
     g.append('rect').attr('x',0).attr('y',b.y).attr('width',S.W).attr('height',b.h).attr('fill',JC[jur.id].bg);
-    g.append('text').attr('x',14).attr('y',b.y+16).attr('font-size','10px').attr('font-weight',700).attr('fill',JC[jur.id].fill).attr('opacity',.45).attr('letter-spacing','.1em').attr('font-family','Source Sans Pro,sans-serif').text(jur.name.toUpperCase());
+    g.append('text').attr('x',14).attr('y',b.y+16).attr('font-size','10px').attr('font-weight',700).attr('fill',JC[jur.id].fill).attr('opacity',.45).attr('letter-spacing','.1em').attr('font-family',FONT_SANS).text(jur.name.toUpperCase());
   });
   svg.append('g').attr('id','conns');svg.append('g').attr('id','particles');svg.append('g').attr('id','nodes');
 }
@@ -408,10 +521,11 @@ function renderJourney(j,anim){
   const active=j.steps.map(id=>nodeMap[id]).filter(Boolean);
   const grp={federal:[],state:[],local:[]};
   active.forEach(n=>grp[n.jurisdiction].push(n));
+  const sf=Math.min(1,S.W/700);
   const cvs=document.createElement('canvas'),ctx=cvs.getContext('2d');
-  ctx.font='12px Source Sans Pro,sans-serif';
-  active.forEach(n=>{n._tw=ctx.measureText(n.name).width;n._nw=n._tw+20;n._nh=28});
-  const GAP=18;
+  ctx.font=(12*sf)+'px '+FONT_SANS;
+  active.forEach(n=>{n._tw=ctx.measureText(n.name).width;n._nw=n._tw+20*sf;n._nh=28*sf});
+  const GAP=18*sf;
   Object.entries(grp).forEach(([jur,ns])=>{
     if(!ns.length)return;const b=S.bands[jur];
     const tw=ns.reduce((s,n)=>s+n._nw,0)+(ns.length-1)*GAP;
@@ -422,8 +536,8 @@ function renderJourney(j,anim){
   sel.exit().transition().duration(200).attr('opacity',0).remove();
   const en=sel.enter().append('g').attr('class','node').attr('opacity',0).attr('transform',d=>`translate(${d._x},${d._y}) scale(.7)`).style('cursor','pointer');
   en.append('rect').attr('x',d=>-d._nw/2).attr('y',d=>-d._nh/2).attr('width',d=>d._nw).attr('height',d=>d._nh).attr('rx',4).attr('fill',d=>JC[d.jurisdiction].light).attr('stroke',d=>JC[d.jurisdiction].fill).attr('stroke-width',1.5);
-  en.append('text').attr('text-anchor','middle').attr('dominant-baseline','central').attr('font-size','11.5px').attr('font-weight',600).attr('font-family','Source Sans Pro,sans-serif').attr('fill',d=>JC[d.jurisdiction].fill).text(d=>d.name);
-  en.on('mouseenter',(e,d)=>showTip(e,d)).on('mouseleave',hideTip);
+  en.append('text').attr('text-anchor','middle').attr('dominant-baseline','central').attr('font-size',(11.5*sf)+'px').attr('font-weight',600).attr('font-family',FONT_SANS).attr('fill',d=>JC[d.jurisdiction].fill).text(d=>d.name);
+  if(isMobile()){en.on('click',(e,d)=>{e.stopPropagation();showTip(e,d);clearTimeout(window._tipTimer);window._tipTimer=setTimeout(hideTip,2500)})}else{en.on('mouseenter',(e,d)=>showTip(e,d)).on('mouseleave',hideTip)}
   const dur=anim?300:0;
   en.transition().duration(dur).delay((_,i)=>anim?i*40:0).attr('opacity',1).attr('transform',d=>`translate(${d._x},${d._y}) scale(1)`);
   sel.transition().duration(dur).attr('transform',d=>`translate(${d._x},${d._y}) scale(1)`).attr('opacity',1);
@@ -468,10 +582,11 @@ function showNetwork(){
   const freq={};PLC_NODES.forEach(n=>freq[n.id]=0);JOURNEYS.forEach(j=>j.steps.forEach(s=>freq[s]++));
   const mf=Math.max(...Object.values(freq));
   const grp={federal:[],state:[],local:[]};PLC_NODES.forEach(n=>{n._freq=freq[n.id];grp[n.jurisdiction].push(n)});
-  const cvs=document.createElement('canvas'),ctx=cvs.getContext('2d');ctx.font='9.5px Source Sans Pro,sans-serif';
-  const GAP=10;
+  const nsf=Math.min(1,S.W/700);
+  const cvs=document.createElement('canvas'),ctx=cvs.getContext('2d');ctx.font=(9.5*nsf)+'px '+FONT_SANS;
+  const GAP=10*nsf;
   Object.entries(grp).forEach(([jur,ns])=>{
-    const b=S.bands[jur];ns.forEach(n=>{n._tw=ctx.measureText(n.name).width;n._nw=n._tw+14;n._nh=22});
+    const b=S.bands[jur];ns.forEach(n=>{n._tw=ctx.measureText(n.name).width;n._nw=n._tw+14*nsf;n._nh=22*nsf});
     const usable=S.W-28;const rows=[[]];let rw=0;
     ns.forEach(n=>{if(rw+n._nw+GAP>usable&&rows[rows.length-1].length){rows.push([]);rw=0}rows[rows.length-1].push(n);rw+=n._nw+GAP});
     const rH=26,tH=rows.length*rH,sY=b.y+(b.h-tH)/2+6;
@@ -480,9 +595,9 @@ function showNetwork(){
   const nG=svg.select('#nodes');const sel=nG.selectAll('.node').data(PLC_NODES.slice(),d=>d.id);
   sel.exit().transition().duration(200).attr('opacity',0).remove();
   const en=sel.enter().append('g').attr('class','node').attr('opacity',0).attr('transform',d=>`translate(${d._x},${d._y}) scale(.8)`).style('cursor','pointer');
-  en.append('rect').attr('x',d=>-d._nw/2).attr('y',d=>-d._nh/2).attr('width',d=>d._nw).attr('height',d=>d._nh).attr('rx',3).attr('fill',d=>d3.interpolate('#fff',JC[d.jurisdiction].light)(d._freq/mf)).attr('stroke',d=>JC[d.jurisdiction].fill).attr('stroke-width',d=>.5+(d._freq/mf)*1.5).attr('stroke-opacity',d=>.3+(d._freq/mf)*.7);
-  en.append('text').attr('text-anchor','middle').attr('dominant-baseline','central').attr('font-size','9.5px').attr('font-weight',d=>d._freq/mf>.5?700:500).attr('font-family','Source Sans Pro,sans-serif').attr('fill',d=>d3.interpolate('#a9aeb1',JC[d.jurisdiction].fill)(d._freq/mf)).text(d=>d.name);
-  en.on('mouseenter',(e,d)=>showTip(e,d)).on('mouseleave',hideTip);
+  en.append('rect').attr('x',d=>-d._nw/2).attr('y',d=>-d._nh/2).attr('width',d=>d._nw).attr('height',d=>d._nh).attr('rx',3).attr('fill',d=>d3.interpolate(v('--color-white'),JC[d.jurisdiction].light)(d._freq/mf)).attr('stroke',d=>JC[d.jurisdiction].fill).attr('stroke-width',d=>.5+(d._freq/mf)*1.5).attr('stroke-opacity',d=>.3+(d._freq/mf)*.7);
+  en.append('text').attr('text-anchor','middle').attr('dominant-baseline','central').attr('font-size',(9.5*nsf)+'px').attr('font-weight',d=>d._freq/mf>.5?700:500).attr('font-family',FONT_SANS).attr('fill',d=>d3.interpolate(v('--color-base'),JC[d.jurisdiction].fill)(d._freq/mf)).text(d=>d.name);
+  if(isMobile()){en.on('click',(e,d)=>{e.stopPropagation();showTip(e,d);clearTimeout(window._tipTimer);window._tipTimer=setTimeout(hideTip,2500)})}else{en.on('mouseenter',(e,d)=>showTip(e,d)).on('mouseleave',hideTip)}
   en.transition().duration(300).delay((_,i)=>i*12).attr('opacity',1).attr('transform',d=>`translate(${d._x},${d._y}) scale(1)`);
   sel.transition().duration(300).attr('transform',d=>`translate(${d._x},${d._y}) scale(1)`);
   const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
@@ -555,18 +670,6 @@ document.getElementById('search').addEventListener('input',e=>{
   }
 });
 
-// Toggle expand/collapse all
-const toggleAll=document.getElementById('toggle-all');
-let allExpanded=true;
-toggleAll.addEventListener('click',()=>{
-  allExpanded=!allExpanded;
-  toggleAll.textContent=allExpanded?'Collapse all':'Expand all';
-  document.querySelectorAll('.cat-toggle').forEach(b=>{
-    b.setAttribute('aria-expanded',String(allExpanded));
-    const sub=b.nextElementSibling;if(sub)sub.hidden=!allExpanded;
-  });
-});
-
 // ═══════════════════════════════════════════════════════
 // SELECTION & CONTROLS
 // ═══════════════════════════════════════════════════════
@@ -579,6 +682,7 @@ function selectJourney(id){
   // Ensure category is expanded
   const catEl=document.getElementById(`cat-${j.cat}`);
   if(catEl&&catEl.hidden){catEl.hidden=false;const btn=catEl.previousElementSibling;if(btn)btn.setAttribute('aria-expanded','true')}
+  if(isMobile())closeMobileSidebar();
 }
 function deselect(){
   S.active=null;document.querySelectorAll('.usa-sidenav a').forEach(a=>a.classList.remove('usa-current'));
@@ -635,8 +739,8 @@ function hideInfo(){document.getElementById('info-panel').classList.remove('visi
 function showTip(e,n){
   const t=document.getElementById('tip');const u=JOURNEYS.filter(j=>j.steps.includes(n.id)).length;
   t.innerHTML=`<strong>${n.name}</strong><br><span style="color:${JC[n.jurisdiction].fill}">${n.jurisdiction[0].toUpperCase()+n.jurisdiction.slice(1)}</span> &middot; ${u} of ${JOURNEYS.length} journeys`;
-  t.classList.add('visible');const r=wrap.getBoundingClientRect();
-  t.style.left=(e.clientX-r.left+12)+'px';t.style.top=(e.clientY-r.top-10)+'px';
+  t.classList.add('visible');
+  if(!isMobile()){const r=wrap.getBoundingClientRect();t.style.left=(e.clientX-r.left+12)+'px';t.style.top=(e.clientY-r.top-10)+'px'}
 }
 function hideTip(){document.getElementById('tip').classList.remove('visible')}
 
@@ -646,6 +750,36 @@ function hideTip(){document.getElementById('tip').classList.remove('visible')}
 document.getElementById('btn-play').addEventListener('click',togglePlay);
 document.getElementById('btn-network').addEventListener('click',toggleNetwork);
 document.getElementById('sel-speed').addEventListener('change',e=>{S.speed=+e.target.value});
+function isMobile(){return window.innerWidth<=768}
+function closeMobileSidebar(){
+  document.getElementById('app-sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-backdrop').classList.remove('visible');
+}
+function toggleSidebar(){
+  const sb=document.getElementById('app-sidebar');
+  sb.classList.toggle('collapsed');
+  setTimeout(resize,220);
+}
+document.getElementById('sidebar-grip').addEventListener('click',toggleSidebar);
+document.getElementById('sidebar-grip').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleSidebar()}});
+document.getElementById('toggle-all').addEventListener('click',()=>{
+  const btns=document.querySelectorAll('.cat-toggle');
+  const link=document.getElementById('toggle-all');
+  const allExpanded=Array.from(btns).every(b=>b.getAttribute('aria-expanded')==='true');
+  btns.forEach(btn=>{
+    const sub=btn.nextElementSibling;
+    if(allExpanded){btn.setAttribute('aria-expanded','false');if(sub)sub.hidden=true}
+    else{btn.setAttribute('aria-expanded','true');if(sub)sub.hidden=false}
+  });
+  link.textContent=allExpanded?'Expand all':'Collapse all';
+});
+document.getElementById('mobile-menu-btn').addEventListener('click',()=>{
+  const sb=document.getElementById('app-sidebar');
+  sb.classList.add('mobile-open');
+  document.getElementById('sidebar-backdrop').classList.add('visible');
+});
+document.getElementById('sidebar-backdrop').addEventListener('click',closeMobileSidebar);
+document.getElementById('sidebar-close').addEventListener('click',closeMobileSidebar);
 svg.on('click',e=>{if((e.target===svg.node()||e.target.tagName==='rect')&&!S.playing)deselect()});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){if(S.playing)togglePlay();if(S.network)toggleNetwork();deselect()}
@@ -668,7 +802,11 @@ function boot(data){
     <div><div class="sn" style="color:${JC.state.fill}">${PLC_NODES.length}</div><div class="sl">PLC Types</div></div>
     <div><div class="sn" style="color:${JC.local.fill}">3</div><div class="sl">Jurisdictions</div></div>`;
   buildSidebar();
-  window.addEventListener('resize',resize);
+  window.addEventListener('resize',()=>{
+    if(!isMobile()){closeMobileSidebar()}
+    else{document.getElementById('app-sidebar').classList.remove('collapsed')}
+    resize();
+  });
   resize();
 }
 fetch('data/journeys.json')
@@ -681,7 +819,7 @@ fetch('data/journeys.json')
     else showLoadError(new Error('No data source'));
   });
 function showLoadError(e){
-  document.getElementById('landing').innerHTML=`<h2 style="color:#d83933">Failed to load data</h2><p>${e.message}</p>`;
+  document.getElementById('landing').innerHTML=`<h2 style="color:var(--color-error)">Failed to load data</h2><p>${e.message}</p>`;
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@uswds/uswds@3.13.0/dist/js/uswds.min.js" async></script>
