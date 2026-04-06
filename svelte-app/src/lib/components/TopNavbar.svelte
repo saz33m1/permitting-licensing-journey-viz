@@ -25,12 +25,11 @@
 				<input class="invisible w-0" type="radio" name="view-toggle" value="standard" checked={app.viewMode === 'standard'} onchange={() => app.viewMode = 'standard'}>
 			</label>
 			<label
-				class="flex cursor-pointer h-full items-center justify-center px-4 font-mono text-xs font-medium transition-colors opacity-40 cursor-not-allowed"
+				class="flex cursor-pointer h-full items-center justify-center px-4 font-mono text-xs font-medium transition-colors"
 				style="background: {app.viewMode === 'dependency' ? 'var(--ink)' : 'transparent'}; color: {app.viewMode === 'dependency' ? 'var(--surface)' : 'var(--ink)'};"
-				title="Coming soon"
 			>
 				<span>Dependency View</span>
-				<input class="invisible w-0" type="radio" name="view-toggle" value="dependency" disabled>
+				<input class="invisible w-0" type="radio" name="view-toggle" value="dependency" checked={app.viewMode === 'dependency'} onchange={() => app.viewMode = 'dependency'}>
 			</label>
 		</div>
 	</div>

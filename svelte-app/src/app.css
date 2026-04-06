@@ -108,6 +108,13 @@
   transform: rotate(180deg);
 }
 
+/* Node glow for dependency highlighting */
+.node-glow {
+  box-shadow: 0 0 0 2px var(--accent), 0 0 8px 0 rgba(193, 59, 34, 0.3) !important;
+  border-color: var(--accent) !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
 /* Hide scrollbar */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

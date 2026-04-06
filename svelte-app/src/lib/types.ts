@@ -17,6 +17,11 @@ export interface PlcNode {
 	phase: Phase;
 	estTime?: string | null;
 	blocking?: boolean;
+	agency?: string | null;
+	description?: string | null;
+	fee?: string | null;
+	renewalTerm?: string | null;
+	required?: boolean;
 }
 
 export interface Journey {
