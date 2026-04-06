@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { app } from '$lib/stores/app.svelte';
 </script>
 
@@ -7,13 +8,13 @@
 		<button
 			class="font-mono text-xs uppercase tracking-[1.5px] flex items-center gap-2 cursor-pointer"
 			style="color: var(--text);"
-			onclick={() => app.goHome()}
+			onclick={() => goto('/')}
 		>
 			<span style="color: var(--accent);">←</span>
 			Back
 		</button>
 		<span style="color: var(--muted);">|</span>
-		<h2 class="font-display text-lg font-medium" style="color: var(--ink);">Constituent Journey Visualizer</h2>
+		<h2 class="font-display text-lg font-medium" style="color: var(--ink);">Permit & License Journey Explorer</h2>
 	</div>
 	<div class="flex items-center">
 		<div class="flex h-8 items-center" style="border: 1px solid var(--ink);">

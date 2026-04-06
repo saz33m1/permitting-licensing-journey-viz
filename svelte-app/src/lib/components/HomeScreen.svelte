@@ -33,10 +33,10 @@
 	<div class="w-full md:w-2/5 h-auto md:h-screen p-8 md:p-12 lg:p-16 flex flex-col justify-between shrink-0" style="border-right: 1px solid var(--muted);">
 		<div class="space-y-8 max-w-md">
 			<h1 class="font-display text-4xl lg:text-5xl leading-[1.1] tracking-tight" style="color: var(--ink);">
-				Constituent Journey Visualizer
+				Permit & License Journey Explorer
 			</h1>
 			<p class="font-body text-base leading-relaxed" style="color: var(--text);">
-				An interactive, editorial-grade dashboard mapping the labyrinthine processes of government permitting and licensing. It reveals the hidden interdependencies between federal, state, and local requirements, turning bureaucratic friction into a clear, navigable chronological grid.
+				Explore what residents and business owners actually go through to get permitted and licensed. Each journey traces the real path across federal, state, and local agencies, making the full weight of the process visible.
 			</p>
 
 			<!-- Filter Panel -->
