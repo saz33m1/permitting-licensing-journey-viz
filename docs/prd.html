@@ -1,0 +1,223 @@
+# The Jurisdictional Matrix
+
+## Product Overview
+
+**The Pitch:** An interactive, editorial-grade dashboard mapping the labyrinthine processes of government permitting and licensing. It reveals the hidden interdependencies between federal, state, and local requirements, turning bureaucratic friction into a clear, navigable chronological grid.
+
+**For:** Policy makers, civic technologists, and prospective business owners who need to understand the true timeline and bottlenecks of regulatory compliance.
+
+**Device:** desktop
+
+**Design Direction:** A highly structured, grid-based dashboard mapping phases against government levels using muted tones, crisp 1px borders, and a stark, newspaper-inspired aesthetic.
+
+**Inspired by:** The New York Times Interactive Graphics, Bloomberg Terminal, Pudding Data Essays.
+
+---
+
+## Screens
+
+- **Journey Selection Index:** A catalog of available life events and business journeys.
+- **The Core Matrix:** The primary view plotting journey steps on a Jurisdiction vs. Time phase grid.
+- **Dependency Network Overlay:** A toggle state showing connective tissue and blocking requirements between steps.
+- **Requirement Detail Drawer:** A focused sidebar exposing exact forms, costs, and processing times for a single step.
+
+---
+
+## Key Flows
+
+**Explore a Business Journey:** User traces the path to opening a restaurant.
+
+1. User is on **Journey Selection Index** -> sees a clean, typographic list of life events.
+2. User clicks `Open a Restaurant (New York)` -> screen wipes to **The Core Matrix**.
+3. Grid populates with nodes across Federal, State, and Local rows over 4 time phases.
+4. User clicks `Liquor License Application` node -> opens **Requirement Detail Drawer**.
+5. Drawer displays exact forms, costs, and highlights blocking dependencies.
+
+---
+
+<details>
+<summary>Design System</summary>
+
+## Color Palette
+
+- **Primary:** `#1C1B1A` - Ink black for primary text, active nodes, and bold lines.
+- **Background:** `#F4F3F0` - Newsprint off-white for main canvas.
+- **Surface:** `#FFFFFF` - Pure white for active detail drawers and hover states.
+- **Text:** `#3E3D3C` - Dark charcoal for body text and descriptive copy.
+- **Muted:** `#D5D3CE` - Light gray for the structural grid lines and inactive nodes.
+- **Accent:** `#C13B22` - Editorial brick red for blocking dependencies and critical alerts.
+- **Federal Level:** `#2A4B7C` - Muted slate blue for federal tag accents.
+- **State Level:** `#4A6D5E` - Muted sage green for state tag accents.
+- **Local Level:** `#8C5A46` - Muted clay red for local tag accents.
+
+## Typography
+
+Choose fonts that are **distinctive and characterful**, blending editorial authority with data-dense clarity.
+
+- **Headings:** `Newsreader`, 400, 32-48px
+- **Body:** `IBM Plex Sans`, 400, 16px
+- **Labels/Metadata:** `IBM Plex Mono`, 500, 12px
+- **Buttons:** `IBM Plex Mono`, 500, 13px
+
+**Style notes:** Sharp 0px border radius everywhere. Heavy reliance on 1px solid borders to create structure. No drop shadows; depth is implied purely through layout hierarchy, typography weight, and stark background contrast.
+
+## Design Tokens
+
+```css
+:root {
+  --color-primary: #1C1B1A;
+  --color-background: #F4F3F0;
+  --color-surface: #FFFFFF;
+  --color-text: #3E3D3C;
+  --color-muted: #D5D3CE;
+  --color-accent: #C13B22;
+  --color-fed: #2A4B7C;
+  --color-state: #4A6D5E;
+  --color-local: #8C5A46;
+  --font-heading: 'Newsreader', serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --radius: 0px;
+  --border-thin: 1px solid #D5D3CE;
+  --border-thick: 2px solid #1C1B1A;
+}
+```
+
+</details>
+
+---
+
+<details>
+<summary>Screen Specifications</summary>
+
+### Journey Selection Index
+
+**Purpose:** Entry point allowing users to select which bureaucratic journey they want to analyze.
+
+**Layout:** Two-column split. Left: Large editorial typography and project context. Right: Vertically scrolling list of available journeys separated by crisp 1px lines.
+
+**Key Elements:**
+- **Title Block:** `Newsreader`, 48px, `#1C1B1A`, left-aligned. "The Bureaucracy of Beginnings".
+- **Journey Item:** Full-width row, 80px height. Left side features journey title (`IBM Plex Sans`, 20px). Right side features location (`IBM Plex Mono`, 12px, `#8C5A46`).
+- **Progress Counter:** Sticky top-right element showing `7 / 24 Journeys Mapped`.
+
+**States:**
+- **Empty:** N/A (static curated list).
+- **Loading:** Entire list fades to 30% opacity, a 2px top progress bar animates in `#C13B22`.
+- **Error:** Red text block `Failed to load jurisdiction data. Check connection.`
+
+**Components:**
+- **Index Row:** 100% width, 1px bottom border `#D5D3CE`, `IBM Plex Sans`, hover changes background to `#FFFFFF`.
+
+**Interactions:**
+- **Hover [Index Row]:** Background shifts to `#FFFFFF`, right arrow `→` appears at 24px from right edge.
+- **Click [Index Row]:** Screen slides up, transitioning into The Core Matrix.
+
+**Responsive:**
+- **Desktop:** Split 40/60 column layout.
+- **Tablet:** Stacks vertically, title block above list.
+- **Mobile:** Not supported (Desktop targeted).
+
+### The Core Matrix
+
+**Purpose:** The central visualization mapping timeline phases against jurisdictional levels.
+
+**Layout:** A strict CSS Grid. Y-axis: 3 rows (Federal, State, Local). X-axis: 4 columns (Preparation, Application, Inspection, Active).
+
+**Key Elements:**
+- **Axis Labels:** `IBM Plex Mono`, 12px, tracking 1px, `#3E3D3C`, rotated 90deg for Y-axis.
+- **Node (Permit/Step):** Rectangular block, `180px` wide, `border: 1px solid #1C1B1A`, background `#F4F3F0`. Contains step name and duration (e.g., `Employer Identification Number`, `2 Weeks`).
+- **View Toggles:** Top right segmented control to switch between "Standard View" and "Dependency View".
+
+**States:**
+- **Empty:** Grid cells display a faint diagonal hatch pattern in `#D5D3CE`.
+- **Loading:** Nodes draw their 1px borders sequentially from left to right.
+- **Error:** Nodes collapse, displaying a single alert node with `#C13B22` border.
+
+**Components:**
+- **Jurisdiction Row Header:** 120px wide, left side of grid, `border-bottom: 1px solid #D5D3CE`, contains colored dot indicator.
+- **Permit Node:** `padding: 12px`, `font-size: 14px`, `line-height: 1.4`.
+
+**Interactions:**
+- **Hover [Node]:** Border turns to `2px solid #1C1B1A`, background `#FFFFFF`.
+- **Click [Node]:** Slides open Requirement Detail Drawer from right edge.
+
+**Responsive:**
+- **Desktop:** Full width matrix, min-width 1200px.
+- **Tablet:** Requires horizontal scrolling.
+- **Mobile:** Not supported.
+
+### Dependency Network Overlay
+
+**Purpose:** Reveals the blocking requirements between permits across different government levels.
+
+**Layout:** Same underlying grid as The Core Matrix, but overlaid with SVG paths connecting dependent nodes.
+
+**Key Elements:**
+- **Dependency Lines:** SVG `<path>`, `stroke: #C13B22`, `stroke-width: 1.5px`, `fill: none`. Uses right-angled bezier curves.
+- **Directional Arrows:** Small filled triangle at the end of each dependency line pointing to the required next step.
+- **Dimmed Nodes:** Non-critical path nodes drop to 30% opacity when a user hovers over a specific chain.
+
+**States:**
+- **Empty:** No lines drawn.
+- **Loading:** Lines animate in using `stroke-dasharray` transition.
+- **Error:** Tooltip `Dependency map unavailable for this jurisdiction.`
+
+**Components:**
+- **Legend:** Floating bottom-left box, `padding: 16px`, `border: 1px solid #1C1B1A`, `background: #FFFFFF`. Defines line types.
+
+**Interactions:**
+- **Hover [Node]:** Highlights all connected upstream and downstream nodes in `#1C1B1A`, dims rest of matrix.
+- **Click [Line]:** Opens a small tooltip explaining the specific statute causing the dependency.
+
+**Responsive:**
+- **Desktop:** Full screen overlay on existing grid.
+- **Tablet:** Horizontal scrolling maintains SVG context.
+- **Mobile:** Not supported.
+
+### Requirement Detail Drawer
+
+**Purpose:** Deep dive into a single permit's specific forms, costs, and metadata.
+
+**Layout:** Fixed right-side sidebar, 480px wide. Top header with title and jurisdiction tags. Scrollable body with structured data sections.
+
+**Key Elements:**
+- **Drawer Container:** `width: 480px`, `background: #FFFFFF`, `border-left: 2px solid #1C1B1A`, `box-shadow: none`.
+- **Statute Block:** Grey block `#F4F3F0`, `padding: 16px`, mono font quoting the exact legal requirement.
+- **Data Grid:** 2-column layout showing `Cost: $450`, `Wait Time: 4-6 Weeks`, `Renewal: Annual`.
+- **Action Links:** External links to official government portals, styled with an underline and an external arrow icon.
+
+**States:**
+- **Empty:** Displays "Select a node to view requirements".
+- **Loading:** Skeleton rectangles in `#D5D3CE` pulsing softly.
+- **Error:** "Data for this requirement is currently under review."
+
+**Components:**
+- **Jurisdiction Tag:** `padding: 4px 8px`, `border: 1px solid var(--color-fed)`, `color: var(--color-fed)`, `font-family: 'IBM Plex Mono'`.
+- **Close Button:** Top right, `24x24px`, sharp `X` icon, `border: 1px solid #1C1B1A`.
+
+**Interactions:**
+- **Click [Close Button]:** Drawer slides out to the right, matrix nodes return to default state.
+- **Hover [Action Link]:** Underline expands from 1px to 2px, `#C13B22`.
+
+**Responsive:**
+- **Desktop:** Pushes matrix slightly left, occupies right 480px.
+- **Tablet:** Overlays full screen.
+- **Mobile:** Not supported.
+
+</details>
+
+---
+
+<details>
+<summary>Build Guide</summary>
+
+**Stack:** HTML + Tailwind CSS v3
+
+**Build Order:**
+1. **The Core Matrix** - Start here. Establishing the strict CSS grid and node structure is the hardest technical challenge and sets the typography/spacing rules for the entire app.
+2. **Requirement Detail Drawer** - Easiest to build right after the grid to ensure state management (clicking a node -> opening data) works perfectly.
+3. **Dependency Network Overlay** - Requires absolute positioning of SVGs over the existing DOM nodes from step 1. Coordinate calculation needed.
+4. **Journey Selection Index** - Build last. It's an introductory screen that simply routes data to the already-built matrix engine.
+
+</details>

@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+:root {
+  /* Editorial palette */
+  --ink: #1C1B1A;
+  --newsprint: #F4F3F0;
+  --surface: #FFFFFF;
+  --text: #3E3D3C;
+  --muted: #D5D3CE;
+  --accent: #C13B22;
+
+  /* Jurisdiction colors */
+  --federal: #2A4B7C;
+  --state: #4A6D5E;
+  --local: #8C5A46;
+
+  /* shadcn compat tokens */
+  --background: var(--newsprint);
+  --foreground: var(--ink);
+  --border: var(--muted);
+  --input: var(--muted);
+  --ring: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--surface);
+  --secondary: var(--muted);
+  --secondary-foreground: var(--ink);
+  --destructive: var(--accent);
+  --destructive-foreground: var(--surface);
+  --muted-foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --accent-color: var(--newsprint);
+  --accent-foreground: var(--ink);
+
+  --radius: 0px;
+}
+
+@theme inline {
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent-color);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-ring: var(--ring);
+  --color-radius: var(--radius);
+
+  --color-ink: var(--ink);
+  --color-newsprint: var(--newsprint);
+  --color-surface: var(--surface);
+  --color-text-main: var(--text);
+  --color-fed: var(--federal);
+  --color-state-jur: var(--state);
+  --color-local-jur: var(--local);
+
+  --font-display: 'Newsreader', serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    background-color: var(--newsprint);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Hatch pattern for empty matrix cells */
+.hatch-pattern {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    var(--muted) 10px,
+    var(--muted) 11px
+  );
+  opacity: 0.3;
+}
+
+/* Vertical text for row labels */
+.vertical-text {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* Hide scrollbar */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
