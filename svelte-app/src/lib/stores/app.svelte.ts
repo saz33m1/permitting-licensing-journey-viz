@@ -19,7 +19,6 @@ export const JURISDICTIONS_ORDER = ['federal', 'state', 'local'] as const;
 
 // App state
 let _active = $state<string | null>(null);
-let _screen = $state<'home' | 'journey'>('home');
 let _viewMode = $state<'standard' | 'dependency'>('standard');
 let _selectedNode = $state<string | null>(null);
 
@@ -39,8 +38,6 @@ let _catName = $state<Record<string, string>>({});
 export const app = {
 	get active() { return _active; },
 	set active(v) { _active = v; },
-	get screen() { return _screen; },
-	set screen(v) { _screen = v; },
 	get viewMode() { return _viewMode; },
 	set viewMode(v) { _viewMode = v; },
 	get selectedNode() { return _selectedNode; },
@@ -99,12 +96,10 @@ export const app = {
 
 	selectJourney(id: string) {
 		_active = id;
-		_screen = 'journey';
 	},
 
 	goHome() {
 		_active = null;
 		_selectedNode = null;
-		_screen = 'home';
 	}
 };
