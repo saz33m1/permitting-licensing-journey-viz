@@ -2,11 +2,20 @@
 	import { app, JC, PHASES, PHASE_LABELS, JURISDICTIONS_ORDER } from '$lib/stores/app.svelte';
 	import { computeMatrix } from '$lib/utils/matrix';
 	import NodeCard from './NodeCard.svelte';
+	import FlowPathOverlay from './FlowPathOverlay.svelte';
 	import type { Journey } from '$lib/types';
 
 	let { journey }: { journey: Journey } = $props();
 
 	const matrix = $derived(computeMatrix(journey, app.nodeMap));
+
+	const stepIndexMap = $derived.by(() => {
+		const map: Record<string, number> = {};
+		journey.steps.forEach((id, i) => { map[id] = i; });
+		return map;
+	});
+
+	let gridEl: HTMLDivElement | undefined = $state();
 
 	const jurLabels: Record<string, string> = {
 		federal: 'Federal',
@@ -15,7 +24,8 @@
 	};
 </script>
 
-<div class="grid w-full" style="grid-template-columns: 80px repeat(4, 1fr); border: 1px solid var(--ink);">
+<div class="relative">
+<div bind:this={gridEl} class="grid w-full" style="grid-template-columns: 80px repeat(4, 1fr); border: 1px solid var(--ink);">
 	<!-- Top-left corner cell -->
 	<div style="border-bottom: 1px solid var(--ink); border-right: 1px solid var(--ink); background: rgba(213,211,206,.15);"></div>
 
@@ -53,11 +63,15 @@
 				{#if nodes.length > 0}
 					<div class="flex flex-col gap-3">
 						{#each nodes as node (node.id)}
-							<NodeCard {node} />
+							<NodeCard {node} stepIndex={stepIndexMap[node.id]} />
 						{/each}
 					</div>
 				{/if}
 			</div>
 		{/each}
 	{/each}
+</div>
+{#if app.viewMode === 'dependency' && gridEl}
+	<FlowPathOverlay containerEl={gridEl} steps={journey.steps} />
+{/if}
 </div>

@@ -2,9 +2,15 @@
 	import { app } from '$lib/stores/app.svelte';
 	import TopNavbar from './TopNavbar.svelte';
 	import MatrixGrid from './MatrixGrid.svelte';
+	import NodeDetailPanel from './NodeDetailPanel.svelte';
 
 	const journey = $derived(app.activeJourney);
 	const catLabel = $derived(journey ? (app.catName[journey.cat] ?? journey.cat) : '');
+
+	const selectedNodeObj = $derived(app.selectedNode ? app.nodeMap[app.selectedNode] : null);
+	const selectedStepIndex = $derived(
+		app.selectedNode && journey ? journey.steps.indexOf(app.selectedNode) : -1
+	);
 </script>
 
 {#if journey}
@@ -27,5 +33,14 @@
 				<MatrixGrid {journey} />
 			</div>
 		</main>
+
+		<!-- Node Detail Panel -->
+		{#if selectedNodeObj}
+			<NodeDetailPanel
+				node={selectedNodeObj}
+				stepIndex={selectedStepIndex >= 0 ? selectedStepIndex : undefined}
+				totalSteps={journey.steps.length}
+			/>
+		{/if}
 	</div>
 {/if}
