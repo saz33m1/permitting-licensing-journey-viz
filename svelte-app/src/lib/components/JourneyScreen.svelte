@@ -23,7 +23,7 @@
 				{journey.name}
 			</h1>
 			<p class="font-mono text-xs mt-2 tracking-[1.5px] uppercase" style="color: var(--text);">
-				Journey Analysis & Requirements Timeline
+				Illustrative steps, sequence, and timelines
 			</p>
 		</div>
 

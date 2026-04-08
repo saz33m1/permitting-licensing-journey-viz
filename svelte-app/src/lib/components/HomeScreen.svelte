@@ -36,11 +36,25 @@
 				Permit & License Journey Explorer
 			</h1>
 			<p class="font-body text-base leading-relaxed" style="color: var(--text);">
-				Explore what residents and business owners actually go through to get permitted and licensed. Each journey traces the real path across federal, state, and local agencies, making the full weight of the process visible.
+				Starting a business, becoming licensed in a profession or building an addition to your home. Each one requires permits and licenses from multiple levels of government. These journeys map out what that process actually looks like for the people going through it. The steps are illustrative, but the complexity they represent is not.
 			</p>
 
 			<!-- Filter Panel -->
 			<div class="space-y-5 pt-2">
+				<!-- Search -->
+				<div class="relative">
+					<svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style="color: var(--text);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+						<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+					</svg>
+					<input
+						type="text"
+						placeholder="Search journeys..."
+						class="w-full pl-10 pr-3 py-2.5 font-mono text-xs"
+						style="border: 1px solid var(--ink); background: #fff; color: var(--ink); outline: none;"
+						bind:value={app.filterSearch}
+					/>
+				</div>
+
 				<!-- By Jurisdiction -->
 				<div>
 					<h3 class="font-mono text-[10px] uppercase tracking-[2px] mb-3" style="color: var(--text);">By Jurisdiction</h3>
@@ -71,17 +85,6 @@
 							</button>
 						{/each}
 					</div>
-				</div>
-
-				<!-- Search -->
-				<div class="relative">
-					<input
-						type="text"
-						placeholder="Search journeys..."
-						class="w-full px-3 py-2 font-mono text-xs"
-						style="border: 1px solid var(--muted); background: transparent; color: var(--ink); outline: none;"
-						bind:value={app.filterSearch}
-					/>
 				</div>
 
 				{#if hasFilters}
