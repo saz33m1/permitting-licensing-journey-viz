@@ -99,11 +99,6 @@
 			</div>
 		</div>
 
-		<div class="hidden md:block mt-8">
-			<p class="font-mono text-xs uppercase tracking-[2px]" style="color: var(--text);">
-				Select a journey to begin tracing
-			</p>
-		</div>
 	</div>
 
 	<!-- Right Column: Journey List -->
@@ -117,6 +112,8 @@
 				{/if}
 				<span class="font-medium" style="color: var(--ink);">{app.journeys.length}</span>
 				<span class="uppercase tracking-[1.5px] ml-1">Journeys</span>
+				<span class="ml-1 opacity-40">|</span>
+				<span class="ml-1 uppercase tracking-[1.5px]">Select a journey to begin tracing</span>
 			</div>
 		</div>
 
