@@ -112,31 +112,29 @@
 <!-- RECURRING OBLIGATIONS -->
 <section class="w-full px-6 md:px-16 py-16 md:py-24" style="background: var(--newsprint);">
 	<div class="max-w-[1200px] mx-auto">
-		<div class="flex flex-col md:flex-row gap-10 md:gap-20 items-start" style="border-left: 4px solid var(--accent); padding-left: 2rem;">
-			<div class="flex-1">
-				<span class="font-mono text-[10px] uppercase tracking-[2px] block mb-4" style="color: var(--accent);">Ongoing</span>
-				<h2 class="font-display text-3xl md:text-4xl leading-[1.1] tracking-tight mb-6" style="color: var(--ink);">
-					Not every step is one-and-done
-				</h2>
-				<p class="font-body text-base leading-relaxed" style="color: var(--text);">
-					Many permits and licenses must be renewed on a regular cycle. These steps are marked with a renewal indicator in the matrix. They appear at the point in the journey where they are first established, but they continue for as long as the business or license is active.
-				</p>
-			</div>
-			<div class="flex flex-wrap gap-3 md:pt-8">
-				{#each [
-					{ term: 'Annual', examples: 'Business License, Fire Inspection' },
-					{ term: 'Every 2 Years', examples: 'Liquor License, Professional License' },
-					{ term: 'Every 5 Years', examples: 'EPA Permit, Mining Permit' },
-					{ term: 'Biennial', examples: 'FDA Registration, DOT Authority' }
-				] as item}
-					<div class="px-4 py-3 w-full sm:w-auto" style="border: 1px solid var(--ink);">
-						<div class="flex items-center gap-2 mb-1">
-							<span class="font-body text-base font-semibold" style="color: var(--ink);">&#8635; {item.term}</span>
-						</div>
-						<span class="font-mono text-[10px]" style="color: var(--text);">{item.examples}</span>
+		<div class="mb-10" style="border-left: 4px solid var(--accent); padding-left: 2rem;">
+			<span class="font-mono text-[10px] uppercase tracking-[2px] block mb-4" style="color: var(--accent);">Ongoing</span>
+			<h2 class="font-display text-3xl md:text-4xl leading-[1.1] tracking-tight mb-6" style="color: var(--ink);">
+				Not every step is one-and-done
+			</h2>
+			<p class="font-body text-base leading-relaxed max-w-[720px]" style="color: var(--text);">
+				Many permits and licenses must be renewed on a regular cycle. These steps are marked with a renewal indicator in the matrix. They appear at the point in the journey where they are first established, but they continue for as long as the business or license is active.
+			</p>
+		</div>
+		<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+			{#each [
+				{ term: 'Annual', examples: 'Business License, Fire Inspection' },
+				{ term: 'Every 2 Years', examples: 'Liquor License, Professional License' },
+				{ term: 'Every 5 Years', examples: 'EPA Permit, Mining Permit' },
+				{ term: 'Biennial', examples: 'FDA Registration, DOT Authority' }
+			] as item}
+				<div class="px-4 py-3" style="border: 1px solid var(--ink);">
+					<div class="flex items-center gap-2 mb-1">
+						<span class="font-body text-base font-semibold" style="color: var(--ink);">&#8635; {item.term}</span>
 					</div>
-				{/each}
-			</div>
+					<span class="font-mono text-[10px]" style="color: var(--text);">{item.examples}</span>
+				</div>
+			{/each}
 		</div>
 	</div>
 </section>
@@ -205,15 +203,3 @@
 		</div>
 	</div>
 </section>
-
-<!-- FOOTER -->
-<footer class="w-full px-6 md:px-16 py-12" style="background: var(--ink); color: var(--newsprint);">
-	<div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-		<p class="font-mono text-xs opacity-60">
-			Part of <strong class="opacity-100">Catalyst</strong> &mdash; an open-source Permitting &amp; Licensing platform for state and local governments.
-		</p>
-		<a href="/" class="font-mono text-xs uppercase tracking-[2px] opacity-60 hover:opacity-100 transition-opacity">
-			&larr; Back to Explorer
-		</a>
-	</div>
-</footer>

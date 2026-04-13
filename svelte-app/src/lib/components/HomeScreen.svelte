@@ -28,9 +28,9 @@
 	const hasFilters = $derived(app.filterJurisdictions.length > 0 || app.filterCategories.length > 0 || app.filterSearch.length > 0);
 </script>
 
-<div class="h-screen overflow-hidden flex flex-col md:flex-row" style="background: var(--newsprint);">
+<div class="flex-1 overflow-hidden flex flex-col md:flex-row" style="background: var(--newsprint);">
 	<!-- Left Column: Context + Filters -->
-	<div class="w-full md:w-2/5 h-auto md:h-screen p-8 md:p-12 lg:p-16 flex flex-col justify-between shrink-0" style="border-right: 1px solid var(--muted);">
+	<div class="w-full md:w-2/5 h-auto md:h-screen p-8 md:p-12 lg:p-16 flex flex-col shrink-0 overflow-y-auto" style="border-right: 1px solid var(--muted);">
 		<div class="space-y-8 max-w-md">
 			<h1 class="font-display text-4xl lg:text-5xl leading-[1.1] tracking-tight" style="color: var(--ink);">
 				Permit & License Journey Explorer
@@ -38,6 +38,14 @@
 			<p class="font-body text-base leading-relaxed" style="color: var(--text);">
 				Starting a business, becoming licensed in a profession or building an addition to your home. Each one requires permits and licenses from multiple levels of government. These journeys map out what that process actually looks like for the people going through it. The steps are illustrative, but the complexity they represent is not.
 			</p>
+			<div class="space-y-2">
+				<a href="/methodology" class="font-mono text-xs uppercase tracking-[1.5px] underline hover:no-underline block" style="color: var(--text);">
+					How we mapped these journeys &rarr;
+				</a>
+				<p class="font-mono text-xs leading-relaxed" style="color: var(--text);">
+					Part of <a href="https://github.com/saz33m1" target="_blank" rel="noopener noreferrer" class="font-bold no-underline hover:underline" style="color: var(--ink);">Catalyst</a> &mdash; an open-source Permitting &amp; Licensing platform for state and local governments.
+				</p>
+			</div>
 
 			<!-- Filter Panel -->
 			<div class="space-y-5 pt-2">
@@ -98,7 +106,6 @@
 				{/if}
 			</div>
 		</div>
-
 	</div>
 
 	<!-- Right Column: Journey List -->
