@@ -15,6 +15,24 @@
 		return map;
 	});
 
+	// Compute per-phase step rank for horizontal offset across jurisdiction rows
+	const phaseStepRank = $derived.by(() => {
+		const rank: Record<string, number> = {};
+		// Group steps by their phase, sorted by step index
+		const byPhase: Record<string, string[]> = {};
+		for (const stepId of journey.steps) {
+			const node = app.nodeMap[stepId];
+			if (!node) continue;
+			if (!byPhase[node.phase]) byPhase[node.phase] = [];
+			byPhase[node.phase].push(stepId);
+		}
+		// Assign rank 0, 1, 2... within each phase (already in step order)
+		for (const phase of Object.keys(byPhase)) {
+			byPhase[phase].forEach((id, i) => { rank[id] = i; });
+		}
+		return rank;
+	});
+
 	let gridEl: HTMLDivElement | undefined = $state();
 
 	const jurLabels: Record<string, string> = {
@@ -61,9 +79,12 @@
 				style="{jurIdx < 2 ? 'border-bottom: 1px solid var(--muted);' : ''} {phaseIdx < 3 ? 'border-right: 1px solid var(--muted);' : ''}"
 			>
 				{#if nodes.length > 0}
+					{@const sorted = [...nodes].sort((a, b) => (stepIndexMap[a.id] ?? 0) - (stepIndexMap[b.id] ?? 0))}
 					<div class="flex flex-col gap-3">
-						{#each nodes as node (node.id)}
-							<NodeCard {node} stepIndex={stepIndexMap[node.id]} />
+						{#each sorted as node (node.id)}
+							<div style="margin-left: {(phaseStepRank[node.id] ?? 0) * 20}px;">
+								<NodeCard {node} stepIndex={stepIndexMap[node.id]} />
+							</div>
 						{/each}
 					</div>
 				{/if}

@@ -74,8 +74,8 @@
 		<div class="px-8 py-4 flex items-start justify-between gap-6" style="border-bottom: 1px solid var(--muted);">
 			<div class="shrink-0">
 				<a href="/" class="font-mono text-xs tracking-[1.5px] uppercase no-underline hover:underline" style="color: var(--text);">
-					Permit & License Journey Explorer
-				</a>
+						Permit & License Journey Explorer
+					</a>
 				<h1 class="font-display text-3xl lg:text-4xl font-bold leading-tight mt-1" style="color: var(--ink);">
 					{journey.name}
 				</h1>
