@@ -3,10 +3,9 @@
   "configurations": [
     {
       "name": "svelte-dev",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["vite", "dev", "--port", "5173"],
-      "port": 5173,
-      "cwd": "svelte-app"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5173"],
+      "port": 5173
     }
   ]
 }

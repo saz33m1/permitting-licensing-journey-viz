@@ -1,6 +1,6 @@
 # Data Collection Methodology
 
-How the 114 journeys, 61 PLC nodes, and 15 categories in `data/journeys.json` were compiled.
+How the 114 journeys, 58 PLC nodes, and 15 categories in `static/data/journeys.json` were compiled.
 
 ## Approach
 
@@ -37,7 +37,7 @@ The data was compiled using domain knowledge from:
 **IS:**
 - A representative model of how PLC requirements distribute across jurisdiction levels
 - An abstraction useful for stakeholder presentations and system design
-- Expandable — new journeys, nodes, and categories can be added to `data/journeys.json`
+- Expandable — new journeys, nodes, and categories can be added to `static/data/journeys.json`
 - Directionally accurate for the "typical" US jurisdiction
 
 **IS NOT:**
@@ -77,13 +77,13 @@ The 15 categories were chosen to span the full breadth of government-citizen PLC
 
 ### How to expand the dataset
 
-1. **Add a journey:** Append to the `journeys` array in `data/journeys.json`. Reference existing PLC node IDs in `steps`. If a step doesn't exist, add the node first.
+1. **Add a journey:** Append to the `journeys` array in `static/data/journeys.json`. Reference existing PLC node IDs in `steps`. If a step doesn't exist, add the node first.
 
 2. **Add a PLC node:** Append to `plcNodes` array. Choose the correct `jurisdiction`. Pick a clear, generic `name`.
 
 3. **Add a category:** Append to `categories` array. Reference the new `id` in journey entries.
 
-4. **Validate:** Run the visualizer and check that new journeys render correctly across all three jurisdiction bands. The network mode shows node frequency — a node used by zero journeys indicates a data issue.
+4. **Validate:** Run `npm run dev` and check that new journeys render correctly across the phase × jurisdiction matrix. Nodes referenced by a journey but missing from `plcNodes`, or nodes with an unknown `phase`/`jurisdiction`, will show up broken in the grid.
 
 ### Future improvements
 
