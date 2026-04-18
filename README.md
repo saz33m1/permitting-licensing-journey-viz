@@ -35,7 +35,12 @@ See [`DATA_COLLECTION.md`](DATA_COLLECTION.md) for research methodology and [`do
 
 ## Deploy
 
-Currently uses `@sveltejs/adapter-auto`; swap in a platform-specific adapter (`adapter-static` for Cloudflare/GitHub/Netlify Pages, or `adapter-vercel` / `adapter-netlify` / `adapter-cloudflare` for SSR) before deploying.
+Configured for **Cloudflare Pages** (SSR) via `@sveltejs/adapter-cloudflare`. In the Cloudflare dashboard, create a Pages project connected to this repo with:
+
+- **Framework preset:** SvelteKit
+- **Build command:** `npm run build`
+- **Build output directory:** `.svelte-kit/cloudflare`
+- **Node version:** 20+
 
 ## License
 
