@@ -15,7 +15,7 @@ The visualization is an "editorial-grade" dashboard: newspaper-inspired aestheti
 - **Tailwind v4** (via `@tailwindcss/vite`) with design tokens in `src/app.css`
 - **shadcn-svelte** primitives in `src/lib/components/ui/` (configured in `components.json`, baseColor `zinc`, registry `shadcn-svelte.com`, built on `bits-ui`)
 - **GSAP** for the animated flow-path overlay
-- Currently uses `@sveltejs/adapter-auto` — no deploy target is pinned yet
+- **`@sveltejs/adapter-cloudflare`** — targets Cloudflare Pages with SSR
 
 ## Common Commands
 
@@ -101,7 +101,9 @@ The 114 journeys are **archetypal** — what steps a person typically encounters
 
 ## Deployment
 
-Not yet deployed. `adapter-auto` will pick a platform adapter at build time on a supported host. For free static hosting (Cloudflare Pages, GitHub Pages, Netlify) swap in `@sveltejs/adapter-static` + `export const prerender = true` in root `+layout.ts` (and an `entries()` export on `/journey/[id]` to enumerate the 114 journey IDs at build time). For SSR, use the platform-specific adapter.
+Target: **Cloudflare Pages** (SSR, free tier — 100k requests/day). Uses `@sveltejs/adapter-cloudflare`. Build output lands in `.svelte-kit/cloudflare/` with `_worker.js` (the SSR entry) + `_routes.json` + static assets.
+
+To hook up Pages: in the Cloudflare dashboard, create a Pages project pointing at this repo. Framework preset: SvelteKit. Build command: `npm run build`. Build output directory: `.svelte-kit/cloudflare`. Node version: 20+. No env vars or bindings needed.
 
 ## Repo layout
 
