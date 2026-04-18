@@ -1,21 +1,23 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
 # OS
 .DS_Store
 Thumbs.db
-Desktop.ini
 
-# Editors
-.vscode/settings.json
-.idea/
-*.swp
-*.swo
-*~
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
 
-# Python
-__pycache__/
-*.pyc
-.pytest_cache/
-
-# Misc
-*.log
-*.bak
-*.tmp
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
