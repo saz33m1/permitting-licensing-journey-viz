@@ -20,6 +20,7 @@ export const JURISDICTIONS_ORDER = ['federal', 'state', 'local'] as const;
 // App state
 let _active = $state<string | null>(null);
 let _viewMode = $state<'standard' | 'dependency'>('standard');
+let _depMode = $state<'ambient' | 'realistic'>('ambient');
 let _selectedNode = $state<string | null>(null);
 
 // Filters
@@ -39,7 +40,12 @@ export const app = {
 	get active() { return _active; },
 	set active(v) { _active = v; },
 	get viewMode() { return _viewMode; },
-	set viewMode(v) { _viewMode = v; },
+	set viewMode(v) {
+		_viewMode = v;
+		if (v === 'standard') _depMode = 'ambient';
+	},
+	get depMode() { return _depMode; },
+	set depMode(v) { _depMode = v; },
 	get selectedNode() { return _selectedNode; },
 	set selectedNode(v) { _selectedNode = v; },
 

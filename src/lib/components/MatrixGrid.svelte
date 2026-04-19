@@ -3,6 +3,7 @@
 	import { computeMatrix } from '$lib/utils/matrix';
 	import NodeCard from './NodeCard.svelte';
 	import FlowPathOverlay from './FlowPathOverlay.svelte';
+	import RealisticHUD from './RealisticHUD.svelte';
 	import type { Journey } from '$lib/types';
 
 	let { journey }: { journey: Journey } = $props();
@@ -40,6 +41,42 @@
 		state: 'State',
 		local: 'Local'
 	};
+
+	let realisticStatus = $state({
+		day: 0,
+		nodeId: null as string | null,
+		nodeName: null as string | null,
+		weeksInStep: 0,
+		totalWeeksInStep: 0,
+		finished: false
+	});
+	let restartKey = $state(0);
+
+	function handleReplay() {
+		realisticStatus = {
+			day: 0,
+			nodeId: null,
+			nodeName: null,
+			weeksInStep: 0,
+			totalWeeksInStep: 0,
+			finished: false
+		};
+		restartKey++;
+	}
+
+	// Reset HUD when journey or depMode changes.
+	$effect(() => {
+		void journey.id;
+		void app.depMode;
+		realisticStatus = {
+			day: 0,
+			nodeId: null,
+			nodeName: null,
+			weeksInStep: 0,
+			totalWeeksInStep: 0,
+			finished: false
+		};
+	});
 </script>
 
 <div class="relative">
@@ -93,6 +130,16 @@
 	{/each}
 </div>
 {#if app.viewMode === 'dependency' && gridEl}
-	<FlowPathOverlay containerEl={gridEl} steps={journey.steps} />
+	<FlowPathOverlay
+		containerEl={gridEl}
+		steps={journey.steps}
+		nodeMap={app.nodeMap}
+		mode={app.depMode}
+		{restartKey}
+		onStatus={(s) => (realisticStatus = s)}
+	/>
+	{#if app.depMode === 'realistic'}
+		<RealisticHUD status={realisticStatus} onReplay={handleReplay} />
+	{/if}
 {/if}
 </div>

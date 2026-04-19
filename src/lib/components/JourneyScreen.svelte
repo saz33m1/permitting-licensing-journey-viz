@@ -117,21 +117,41 @@
 					{/if}
 				</div>
 				<!-- View Toggle -->
-				<div class="flex h-8 items-center" style="border: 1px solid var(--ink);">
-					<label
-						class="flex cursor-pointer h-full items-center justify-center px-4 font-mono text-xs font-medium transition-colors"
-						style="background: {app.viewMode === 'standard' ? 'var(--ink)' : 'transparent'}; color: {app.viewMode === 'standard' ? 'var(--surface)' : 'var(--ink)'};"
-					>
-						<span>Standard View</span>
-						<input class="invisible w-0" type="radio" name="view-toggle" value="standard" checked={app.viewMode === 'standard'} onchange={() => app.viewMode = 'standard'}>
-					</label>
-					<label
-						class="flex cursor-pointer h-full items-center justify-center px-4 font-mono text-xs font-medium transition-colors"
-						style="background: {app.viewMode === 'dependency' ? 'var(--ink)' : 'transparent'}; color: {app.viewMode === 'dependency' ? 'var(--surface)' : 'var(--ink)'};"
-					>
-						<span>Dependency View</span>
-						<input class="invisible w-0" type="radio" name="view-toggle" value="dependency" checked={app.viewMode === 'dependency'} onchange={() => app.viewMode = 'dependency'}>
-					</label>
+				<div class="flex flex-col items-end gap-1.5">
+					<div class="flex h-8 items-center" style="border: 1px solid var(--ink);">
+						<label
+							class="flex cursor-pointer h-full items-center justify-center px-4 font-mono text-xs font-medium transition-colors"
+							style="background: {app.viewMode === 'standard' ? 'var(--ink)' : 'transparent'}; color: {app.viewMode === 'standard' ? 'var(--surface)' : 'var(--ink)'};"
+						>
+							<span>Standard View</span>
+							<input class="invisible w-0" type="radio" name="view-toggle" value="standard" checked={app.viewMode === 'standard'} onchange={() => app.viewMode = 'standard'}>
+						</label>
+						<label
+							class="flex cursor-pointer h-full items-center justify-center px-4 font-mono text-xs font-medium transition-colors"
+							style="background: {app.viewMode === 'dependency' ? 'var(--ink)' : 'transparent'}; color: {app.viewMode === 'dependency' ? 'var(--surface)' : 'var(--ink)'};"
+						>
+							<span>Dependency View</span>
+							<input class="invisible w-0" type="radio" name="view-toggle" value="dependency" checked={app.viewMode === 'dependency'} onchange={() => app.viewMode = 'dependency'}>
+						</label>
+					</div>
+					{#if app.viewMode === 'dependency'}
+						<div class="flex h-7 items-center" style="border: 1px solid var(--muted);">
+							<label
+								class="flex cursor-pointer h-full items-center justify-center px-3 font-mono text-[10px] tracking-[1px] uppercase transition-colors"
+								style="background: {app.depMode === 'ambient' ? 'var(--muted)' : 'transparent'}; color: {app.depMode === 'ambient' ? 'var(--ink)' : 'var(--text)'};"
+							>
+								<span>Ambient</span>
+								<input class="invisible w-0" type="radio" name="dep-mode-toggle" value="ambient" checked={app.depMode === 'ambient'} onchange={() => app.depMode = 'ambient'}>
+							</label>
+							<label
+								class="flex cursor-pointer h-full items-center justify-center px-3 font-mono text-[10px] tracking-[1px] uppercase transition-colors"
+								style="background: {app.depMode === 'realistic' ? 'var(--muted)' : 'transparent'}; color: {app.depMode === 'realistic' ? 'var(--ink)' : 'var(--text)'};"
+							>
+								<span>Realistic</span>
+								<input class="invisible w-0" type="radio" name="dep-mode-toggle" value="realistic" checked={app.depMode === 'realistic'} onchange={() => app.depMode = 'realistic'}>
+							</label>
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>

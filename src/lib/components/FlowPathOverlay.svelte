@@ -2,90 +2,391 @@
 	import { onMount, onDestroy } from 'svelte';
 	import gsap from 'gsap';
 	import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
-	import { measureNodePositions, buildSvgPath, type NodePosition } from '$lib/utils/pathCalc';
+	import {
+		measureNodePositions,
+		buildSvgPath,
+		buildSegmentPaths,
+		type NodePosition
+	} from '$lib/utils/pathCalc';
+	import type { PlcNode } from '$lib/types';
 
 	gsap.registerPlugin(MotionPathPlugin);
 
-	let { containerEl, steps }: { containerEl: HTMLDivElement; steps: string[] } = $props();
+	interface RealisticStatus {
+		day: number;
+		nodeId: string | null;
+		nodeName: string | null;
+		weeksInStep: number;
+		totalWeeksInStep: number;
+		finished: boolean;
+	}
+
+	let {
+		containerEl,
+		steps,
+		nodeMap,
+		mode = 'ambient',
+		restartKey = 0,
+		onStatus
+	}: {
+		containerEl: HTMLDivElement;
+		steps: string[];
+		nodeMap: Record<string, PlcNode>;
+		mode?: 'ambient' | 'realistic';
+		restartKey?: number;
+		onStatus?: (s: RealisticStatus) => void;
+	} = $props();
 
 	let svgEl: SVGSVGElement | undefined = $state();
 	let dotEl: SVGCircleElement | undefined = $state();
 	let pathEl: SVGPathElement | undefined = $state();
+	const segmentEls: (SVGPathElement | undefined)[] = $state([]);
 
 	let pathD = $state('');
+	let segmentDs = $state<string[]>([]);
 	let positions = $state<NodePosition[]>([]);
 	let svgW = $state(0);
 	let svgH = $state(0);
+
+	const RIPPLE_POOL_SIZE = 4;
+	const rippleEls: (SVGCircleElement | undefined)[] = $state(Array(RIPPLE_POOL_SIZE).fill(undefined));
+	let rippleIdx = 0;
 
 	let timeline: gsap.core.Timeline | null = null;
 	let resizeObs: ResizeObserver | null = null;
 	let activeNodeId: string | null = null;
 
+	const LOOP_MIN_S = 10;
+	const LOOP_MAX_S = 40;
+
 	function recalculate() {
 		if (!containerEl) return;
-		positions = measureNodePositions(containerEl, steps);
+		positions = measureNodePositions(containerEl, steps, nodeMap);
 		pathD = buildSvgPath(positions);
+		segmentDs = buildSegmentPaths(positions);
 		svgW = containerEl.scrollWidth;
 		svgH = containerEl.scrollHeight;
+	}
+
+	function computeDwell(p: NodePosition): number {
+		const base = 0.3;
+		const timeFactor = p.weeks != null ? Math.log10(p.weeks + 1) * 1.4 : 0.25;
+		const blockingBonus = p.blocking ? 1.2 : 0;
+		const requiredDamp = p.required ? 1 : 0.45;
+		return (base + timeFactor + blockingBonus) * requiredDamp;
+	}
+
+	// Pure distance-proportional travel — gives constant visual speed across
+	// segments regardless of length. No constant offset, so short segments stay
+	// short and long ones take proportionally longer.
+	const TRAVEL_PX_PER_SEC = 280;
+	function computeTravel(a: NodePosition, b: NodePosition): number {
+		const dist = Math.hypot(b.cx - a.cx, b.cy - a.cy);
+		return Math.max(0.15, dist / TRAVEL_PX_PER_SEC);
+	}
+
+	function feeWeight(p: NodePosition): number {
+		if (p.feeUsd == null) return 0.15;
+		return Math.min(0.8, Math.log10(p.feeUsd + 1) / 5);
+	}
+
+	function setGlow(id: string | null) {
+		if (!containerEl) return;
+		if (activeNodeId && activeNodeId !== id) {
+			containerEl
+				.querySelector(`[data-node-id="${activeNodeId}"]`)
+				?.classList.remove('node-glow');
+		}
+		if (id) {
+			containerEl.querySelector(`[data-node-id="${id}"]`)?.classList.add('node-glow');
+		}
+		activeNodeId = id;
+	}
+
+	function fireRipple(p: NodePosition) {
+		const el = rippleEls[rippleIdx % RIPPLE_POOL_SIZE];
+		rippleIdx++;
+		if (!el) return;
+		const w = feeWeight(p);
+		const endR = 14 + w * 26;
+		const color = p.blocking ? 'var(--ink)' : 'var(--accent)';
+		gsap.set(el, {
+			attr: { cx: p.cx, cy: p.cy, r: 4, opacity: 0.55, stroke: color, fill: 'none' }
+		});
+		gsap.to(el, {
+			attr: { r: endR, opacity: 0 },
+			duration: 0.7 + w * 0.5,
+			ease: 'power2.out'
+		});
+	}
+
+	function prefersReducedMotion(): boolean {
+		if (typeof window === 'undefined') return false;
+		return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+	}
+
+	function snapDotToFirstNode() {
+		const firstSeg = segmentEls[0];
+		if (!firstSeg || !dotEl) return;
+		gsap.set(dotEl, {
+			motionPath: {
+				path: firstSeg,
+				align: firstSeg,
+				alignOrigin: [0.5, 0.5],
+				start: 0,
+				end: 0
+			}
+		});
 	}
 
 	function startAnimation() {
 		killAnimation();
 		if (!pathD || !dotEl || !pathEl || positions.length < 2) return;
+		if (prefersReducedMotion()) {
+			if (mode === 'realistic') {
+				// Emit a finished status so HUD shows the total day count.
+				const totalDays = positions.reduce((acc, p) => acc + (p.weeks ?? 1) * 7, 0);
+				onStatus?.({
+					day: totalDays,
+					nodeId: null,
+					nodeName: null,
+					weeksInStep: 0,
+					totalWeeksInStep: 0,
+					finished: true
+				});
+			}
+			return;
+		}
 
-		const duration = Math.max(3, positions.length * 0.8);
+		if (mode === 'realistic') {
+			buildRealisticTimeline();
+		} else {
+			buildAmbientTimeline();
+		}
+	}
+
+	function buildAmbientTimeline() {
+		if (!dotEl) return;
+		const n = positions.length;
+
+		const dwells = positions.map(computeDwell);
+		const travels: number[] = [];
+		for (let i = 0; i < n - 1; i++) {
+			travels.push(computeTravel(positions[i], positions[i + 1]));
+		}
+		const rawTotal = dwells.reduce((a, b) => a + b, 0) + travels.reduce((a, b) => a + b, 0);
+		const target = Math.min(LOOP_MAX_S, Math.max(LOOP_MIN_S, rawTotal));
+		const scale = rawTotal > 0 ? target / rawTotal : 1;
 
 		timeline = gsap.timeline({ repeat: -1, repeatDelay: 0.5 });
 
-		// Fade in
-		timeline.fromTo(dotEl, { attr: { opacity: 0 } }, { attr: { opacity: 0.9 }, duration: 0.3 });
+		const firstSeg = segmentEls[0];
+		timeline.set(dotEl, { attr: { opacity: 0 } });
+		if (firstSeg) {
+			timeline.to(dotEl, {
+				motionPath: {
+					path: firstSeg,
+					align: firstSeg,
+					alignOrigin: [0.5, 0.5],
+					start: 0,
+					end: 0
+				},
+				duration: 0
+			});
+		}
+		timeline.to(dotEl, { attr: { opacity: 0.9 }, duration: 0.3 });
 
-		// Move along path
-		timeline.to(dotEl, {
-			motionPath: {
-				path: pathEl,
-				align: pathEl,
-				alignOrigin: [0.5, 0.5]
-			},
-			duration,
-			ease: 'none',
-			onUpdate: function () {
-				if (!dotEl || !containerEl) return;
-				// Get dot position from its transform
-				const matrix = dotEl.getCTM();
-				if (!matrix) return;
-				const dotX = matrix.e;
-				const dotY = matrix.f;
+		for (let i = 0; i < n; i++) {
+			const p = positions[i];
+			const w = feeWeight(p);
+			const dwellSec = Math.max(0.1, dwells[i] * scale);
 
-				// Find nearest node
-				let nearest: string | null = null;
-				let minDist = 35;
-				for (const pos of positions) {
-					const dist = Math.hypot(pos.cx - dotX, pos.cy - dotY);
-					if (dist < minDist) {
-						minDist = dist;
-						nearest = pos.id;
-					}
-				}
+			timeline.call(() => {
+				setGlow(p.id);
+				fireRipple(p);
+			});
 
-				if (nearest !== activeNodeId) {
-					// Remove glow from previous
-					if (activeNodeId) {
-						const prev = containerEl.querySelector(`[data-node-id="${activeNodeId}"]`);
-						prev?.classList.remove('node-glow');
-					}
-					// Add glow to current
-					if (nearest) {
-						const curr = containerEl.querySelector(`[data-node-id="${nearest}"]`);
-						curr?.classList.add('node-glow');
-					}
-					activeNodeId = nearest;
+			const pulseDur = Math.min(dwellSec, 0.35);
+			timeline.to(dotEl, {
+				attr: { r: 5 + w * 4 },
+				duration: pulseDur / 2,
+				ease: 'power2.out'
+			});
+			timeline.to(dotEl, {
+				attr: { r: 5 },
+				duration: pulseDur / 2,
+				ease: 'power2.in'
+			});
+
+			const remaining = dwellSec - pulseDur;
+			if (remaining > 0.01) {
+				timeline.to({}, { duration: remaining });
+			}
+
+			if (i < n - 1) {
+				const next = positions[i + 1];
+				const segEl = segmentEls[i];
+				const travelSec = Math.max(0.1, travels[i] * scale);
+				timeline.call(() => setGlow(null));
+				if (segEl) {
+					timeline.to(dotEl, {
+						motionPath: {
+							path: segEl,
+							align: segEl,
+							alignOrigin: [0.5, 0.5],
+							start: 0,
+							end: 1
+						},
+						duration: travelSec,
+						ease: next.blocking ? 'power2.out' : 'none'
+					});
 				}
 			}
-		});
+		}
 
-		// Fade out
+		timeline.call(() => setGlow(null));
 		timeline.to(dotEl, { attr: { opacity: 0 }, duration: 0.3 });
+	}
+
+	// Realistic mode: 1 day = 0.1s, plays once, emits a status object for HUD.
+	const SEC_PER_DAY = 0.1;
+	const REALISTIC_TRAVEL_S = 0.5;
+
+	function buildRealisticTimeline() {
+		if (!dotEl) return;
+		const n = positions.length;
+
+		// Precompute per-node days and cumulative day at arrival.
+		const nodeDays = positions.map((p) => Math.max(1, (p.weeks ?? 1) * 7));
+		const cumDays: number[] = [];
+		let running = 0;
+		for (let i = 0; i < n; i++) {
+			cumDays.push(running);
+			running += nodeDays[i];
+		}
+		const totalDays = running;
+
+		// Plain proxy object driven by GSAP for the day counter.
+		const dayProxy = { day: 0 };
+
+		const emit = (partial: Partial<RealisticStatus>) => {
+			onStatus?.({
+				day: dayProxy.day,
+				nodeId: null,
+				nodeName: null,
+				weeksInStep: 0,
+				totalWeeksInStep: 0,
+				finished: false,
+				...partial
+			});
+		};
+
+		timeline = gsap.timeline({ repeat: 0 });
+
+		const firstSeg = segmentEls[0];
+		timeline.set(dotEl, { attr: { opacity: 0 } });
+		if (firstSeg) {
+			timeline.to(dotEl, {
+				motionPath: {
+					path: firstSeg,
+					align: firstSeg,
+					alignOrigin: [0.5, 0.5],
+					start: 0,
+					end: 0
+				},
+				duration: 0
+			});
+		}
+		timeline.to(dotEl, { attr: { opacity: 0.9 }, duration: 0.3 });
+
+		for (let i = 0; i < n; i++) {
+			const p = positions[i];
+			const node = nodeMap[p.id];
+			const w = feeWeight(p);
+			const days = nodeDays[i];
+			const dwellSec = Math.max(0.3, days * SEC_PER_DAY);
+			const startDay = cumDays[i];
+			const totalWeeks = days / 7;
+
+			// Arrival: glow, ripple, emit initial node status.
+			timeline.call(() => {
+				setGlow(p.id);
+				fireRipple(p);
+				dayProxy.day = startDay;
+				emit({
+					day: startDay,
+					nodeId: p.id,
+					nodeName: node?.name ?? p.id,
+					weeksInStep: 0,
+					totalWeeksInStep: totalWeeks
+				});
+			});
+
+			// Arrival pulse.
+			const pulseDur = Math.min(dwellSec, 0.35);
+			timeline.to(dotEl, {
+				attr: { r: 5 + w * 4 },
+				duration: pulseDur / 2,
+				ease: 'power2.out'
+			});
+			timeline.to(
+				dotEl,
+				{ attr: { r: 5 }, duration: pulseDur / 2, ease: 'power2.in' },
+				'<'
+			);
+
+			// Day-counter tween driving the HUD. Animates dayProxy.day from
+			// startDay → startDay+days over dwellSec, linearly.
+			timeline.to(
+				dayProxy,
+				{
+					day: startDay + days,
+					duration: dwellSec,
+					ease: 'none',
+					onUpdate: () => {
+						emit({
+							day: dayProxy.day,
+							nodeId: p.id,
+							nodeName: node?.name ?? p.id,
+							weeksInStep: (dayProxy.day - startDay) / 7,
+							totalWeeksInStep: totalWeeks
+						});
+					}
+				},
+				'<'
+			);
+
+			// Travel to next node: fixed short transition, counter frozen.
+			if (i < n - 1) {
+				const segEl = segmentEls[i];
+				timeline.call(() => setGlow(null));
+				if (segEl) {
+					timeline.to(dotEl, {
+						motionPath: {
+							path: segEl,
+							align: segEl,
+							alignOrigin: [0.5, 0.5],
+							start: 0,
+							end: 1
+						},
+						duration: REALISTIC_TRAVEL_S,
+						ease: 'none'
+					});
+				}
+			}
+		}
+
+		timeline.call(() => {
+			setGlow(null);
+			onStatus?.({
+				day: totalDays,
+				nodeId: null,
+				nodeName: null,
+				weeksInStep: 0,
+				totalWeeksInStep: 0,
+				finished: true
+			});
+		});
 	}
 
 	function killAnimation() {
@@ -93,26 +394,26 @@
 			timeline.kill();
 			timeline = null;
 		}
-		// Clean up glow classes
 		if (containerEl) {
-			containerEl.querySelectorAll('.node-glow').forEach(el => el.classList.remove('node-glow'));
+			containerEl.querySelectorAll('.node-glow').forEach((el) => el.classList.remove('node-glow'));
 		}
 		activeNodeId = null;
 	}
 
 	// Recalculate when steps or container change
 	$effect(() => {
-		// Track dependencies
 		void steps;
 		void containerEl;
-		// Defer to next microtask so NodeCards are rendered
+		void nodeMap;
 		queueMicrotask(() => {
 			recalculate();
 		});
 	});
 
-	// Start animation when path is ready
+	// Start animation when path is ready. Also re-runs when mode or restartKey change.
 	$effect(() => {
+		void mode;
+		void restartKey;
 		if (pathD && dotEl && pathEl) {
 			startAnimation();
 		}
@@ -165,26 +466,27 @@
 			opacity="0.25"
 		/>
 
-		<!-- Hidden reference path for GSAP MotionPathPlugin -->
-		<path
-			bind:this={pathEl}
-			d={pathD}
-			fill="none"
-			stroke="none"
-		/>
+		<!-- Hidden reference path for GSAP MotionPathPlugin (full concatenated) -->
+		<path bind:this={pathEl} d={pathD} fill="none" stroke="none" />
+
+		<!-- Hidden per-segment paths — one per node-to-node hop, driven
+		     individually so motion is constant-speed and lands exactly on
+		     each node regardless of bezier arc-length variation. -->
+		{#each segmentDs as segD, i}
+			<path bind:this={segmentEls[i]} d={segD} fill="none" stroke="none" />
+		{/each}
 
 		<!-- Junction dots at each node position -->
 		{#each positions as pos}
 			<circle cx={pos.cx} cy={pos.cy} r="3" fill="var(--accent)" opacity="0.35" />
 		{/each}
 
+		<!-- Ripple pool for arrival pulses -->
+		{#each rippleEls as _, i}
+			<circle bind:this={rippleEls[i]} cx="0" cy="0" r="0" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity="0" />
+		{/each}
+
 		<!-- Animated dot -->
-		<circle
-			bind:this={dotEl}
-			r="5"
-			fill="var(--accent)"
-			opacity="0"
-			filter="url(#dot-glow)"
-		/>
+		<circle bind:this={dotEl} r="5" fill="var(--accent)" opacity="0" filter="url(#dot-glow)" />
 	</svg>
 {/if}
