@@ -2,6 +2,10 @@
 
 An interactive, editorial-grade dashboard mapping how common life and business journeys — opening a restaurant, becoming a nurse, building a home addition, hosting a street festival — require permits, licenses, and compliance steps scattered across **federal, state, and local government**.
 
+![Opening a restaurant — dependency view](media/restaurant-journey.gif)
+
+_Above: the "Open a Restaurant" journey in dependency view, tracing how twelve permits and licenses connect across federal, state, and local jurisdictions. A full-quality [MP4 version](media/restaurant-journey.mp4) is also available._
+
 **114 journeys** | **58 PLC types** | **15 categories** | **3 jurisdiction levels** | **4 phases**
 
 Part of [Catalyst](https://github.com/catalyst-plc), an open-source Permitting & Licensing platform.
