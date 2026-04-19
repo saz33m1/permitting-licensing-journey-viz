@@ -12,10 +12,10 @@
 			&larr; Back to Explorer
 		</a>
 		<h1 class="font-display text-5xl md:text-7xl leading-[1.05] tracking-tight mb-6">
-			How We Mapped<br>the Journeys
+			How I Mapped<br>the User Journeys
 		</h1>
 		<p class="font-body text-lg md:text-xl leading-relaxed max-w-[600px] opacity-70 mb-16">
-			Every journey traces a real path through government &mdash; the permits, licenses, and compliance steps people actually encounter.
+			Behind each journey is someone trying to start a business, build a home, or earn a living. These journey maps reflect the complexity and intertwined paths real humans have to navigate.
 		</p>
 		<div class="grid grid-cols-3 gap-8 md:gap-16 max-w-[700px]">
 			<div>
@@ -72,7 +72,7 @@
 				Steps are ordered by when they happen in practice. You form your business entity before you apply for a liquor license. You get zoning approval before you pull a building permit. You pass your fire inspection before you receive a certificate of occupancy.
 			</p>
 			<p class="font-body text-base leading-relaxed" style="color: var(--text);">
-				The sequence follows the dependency chain &mdash; each step unlocking the next &mdash; not the level of government that issued it.
+				Steps are sequenced by dependency. Each one unlocks the next, regardless of which level of government issued it.
 			</p>
 		</div>
 	</div>
@@ -149,8 +149,8 @@
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 			{#each [
 				{ name: 'SBA.gov', desc: 'Federal business formation guide and 10-step startup sequence' },
-				{ name: 'NJ Business Navigator', desc: 'Open-source NAICS-based business formation framework' },
-				{ name: 'MD PLC Catalog', desc: '1,058 permit, license, and compliance types with operational metadata' },
+				{ name: 'New Jersey Business Navigator', desc: 'Open-source NAICS-based business formation framework' },
+				{ name: 'Maryland PLC Data Catalog', desc: '1,100+ permit, license, and compliance types with operational metadata' },
 				{ name: 'DOL License Finder', desc: 'Federal database of licensing requirements across all states' },
 				{ name: 'NCSL Database', desc: '48 occupations across all states for occupational licensing' },
 				{ name: 'Municipal Codes', desc: 'Common local permitting patterns for construction, land use, events' }

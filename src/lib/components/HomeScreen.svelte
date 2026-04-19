@@ -38,13 +38,30 @@
 			<p class="font-body text-base leading-relaxed" style="color: var(--text);">
 				Starting a business, becoming licensed in a profession or building an addition to your home. Each one requires permits and licenses from multiple levels of government. These journeys map out what that process actually looks like for the people going through it. The steps are illustrative, but the complexity they represent is not.
 			</p>
-			<div class="space-y-2">
+			<div class="space-y-4">
 				<a href="/methodology" class="font-mono text-xs uppercase tracking-[1.5px] underline hover:no-underline block" style="color: var(--text);">
-					How we mapped these journeys &rarr;
+					How I mapped these journeys &rarr;
 				</a>
-				<p class="font-mono text-xs leading-relaxed" style="color: var(--text);">
-					Part of <a href="https://github.com/saz33m1" target="_blank" rel="noopener noreferrer" class="font-bold no-underline hover:underline" style="color: var(--ink);">Catalyst</a> &mdash; an open-source Permitting &amp; Licensing platform for state and local governments.
+				<p class="font-body text-sm leading-relaxed" style="color: var(--text);">
+					I'm <a href="https://github.com/saz33m1" target="_blank" rel="noopener noreferrer" class="font-bold no-underline hover:underline" style="color: var(--ink);">Syed Azeem</a>, and I'm building open-source tools to make permitting and licensing less painful for state and local governments. If that resonates, I'd love to hear from you.
 				</p>
+				<div class="flex flex-wrap gap-3 pt-1">
+					<a
+						href="/contact"
+						class="px-4 py-2.5 font-mono text-[11px] uppercase tracking-[1.5px] no-underline transition-opacity hover:opacity-80"
+						style="background: var(--ink); color: var(--newsprint);"
+					>
+						Get in touch &rarr;
+					</a>
+					<a
+						href="https://github.com/saz33m1/permitting-licensing-journey-viz"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="cta-outline px-4 py-2.5 font-mono text-[11px] uppercase tracking-[1.5px] no-underline transition-colors"
+					>
+						View on GitHub
+					</a>
+				</div>
 			</div>
 
 			<!-- Filter Panel -->
@@ -137,3 +154,15 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	.cta-outline {
+		border: 1px solid var(--ink);
+		color: var(--ink);
+		background: transparent;
+	}
+	.cta-outline:hover {
+		background: var(--ink);
+		color: var(--newsprint);
+	}
+</style>
