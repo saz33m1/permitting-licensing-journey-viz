@@ -8,8 +8,6 @@ _Above: the "Open a Restaurant" journey in dependency view, tracing how twelve p
 
 **114 journeys** | **58 PLC types** | **15 categories** | **3 jurisdiction levels** | **4 phases**
 
-Part of [Catalyst](https://github.com/catalyst-plc), an open-source Permitting & Licensing platform.
-
 ## Stack
 
 SvelteKit 2 · Svelte 5 (runes) · Vite 7 · TypeScript · Tailwind v4 · shadcn-svelte · GSAP.
