@@ -37,12 +37,12 @@ See [`DATA_COLLECTION.md`](DATA_COLLECTION.md) for research methodology and [`do
 
 ## Deploy
 
-Configured for **GitHub Pages** (fully static) via `@sveltejs/adapter-static`. A workflow at [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) builds the site on every push to `main` and publishes it via the `actions/deploy-pages` action.
+Configured for **GitHub Pages** (fully static) via `@sveltejs/adapter-static`. A workflow at [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) builds the site on every push to `master` and publishes it via the `actions/deploy-pages` action.
 
 To enable it on a fresh fork:
 
 1. In the repo settings, go to **Pages** → set **Source** to **GitHub Actions**.
-2. Push to `main` (or run the workflow manually from the Actions tab).
+2. Push to `master` (or run the workflow manually from the Actions tab).
 
 The workflow sets `BASE_PATH=/<repo-name>` at build time so asset and route URLs resolve correctly under the `https://<user>.github.io/<repo-name>/` subpath. For a user/organization root site (`<user>.github.io`), leave `BASE_PATH` unset.
 

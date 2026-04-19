@@ -107,7 +107,7 @@ Static pages (`/`, `/methodology`, `/contact`) are prerendered via `src/routes/+
 
 `svelte.config.js` reads `BASE_PATH` (set by CI to `/<repo-name>`) into `kit.paths.base` so asset and route URLs resolve correctly under `https://<user>.github.io/<repo-name>/`. All internal link paths (`<a href>`, `goto(...)`, and the `fetch` of `/data/journeys.json` in `+layout.svelte`) are prefixed with `import { base } from '$app/paths'` — keep that convention when adding new routes or asset URLs.
 
-Deploy flow: `.github/workflows/deploy.yml` runs on push to `main`, builds with `BASE_PATH=/<repo-name>`, and uploads `build/` via `actions/deploy-pages`. `static/.nojekyll` suppresses Jekyll processing so SvelteKit's `_app/` directory is served as-is.
+Deploy flow: `.github/workflows/deploy.yml` runs on push to `master`, builds with `BASE_PATH=/<repo-name>`, and uploads `build/` via `actions/deploy-pages`. `static/.nojekyll` suppresses Jekyll processing so SvelteKit's `_app/` directory is served as-is.
 
 ## Repo layout
 
