@@ -1,12 +1,13 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
+	import { base } from '$app/paths';
 	import { app } from '$lib/stores/app.svelte';
 
 	let { children } = $props();
 
 	onMount(() => {
-		fetch('/data/journeys.json')
+		fetch(`${base}/data/journeys.json`)
 			.then(r => { if (!r.ok) throw new Error('Failed to load'); return r.json(); })
 			.then(data => app.loadData(data))
 			.catch(() => console.error('Failed to load journeys.json'));

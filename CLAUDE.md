@@ -15,7 +15,7 @@ The visualization is an "editorial-grade" dashboard: newspaper-inspired aestheti
 - **Tailwind v4** (via `@tailwindcss/vite`) with design tokens in `src/app.css`
 - **shadcn-svelte** primitives in `src/lib/components/ui/` (configured in `components.json`, baseColor `zinc`, registry `shadcn-svelte.com`, built on `bits-ui`)
 - **GSAP** for the animated flow-path overlay
-- **`@sveltejs/adapter-cloudflare`** — targets Cloudflare Pages with SSR
+- **`@sveltejs/adapter-static`** — targets GitHub Pages as a fully static site (SPA fallback for the dynamic journey route)
 
 ## Common Commands
 
@@ -66,7 +66,7 @@ Also exports `JC` (jurisdiction color hex map), `PHASE_LABELS`, `PHASES`, `JURIS
 | `/journey/[id]` | `JourneyScreen` | 2D matrix view; invalid `[id]` redirects to `/`; Esc returns home |
 | `/methodology` | static page | Explains the 4 phases, dependency ordering, sources, caveats |
 
-No `+page.ts` / `+page.server.ts` files — routing is purely client-side reactive via the store.
+`src/routes/+layout.ts` sets `prerender = true`; the dynamic `/journey/[id]` route opts out via its own `+page.ts` (`prerender = false`) and is served through the SPA fallback at build time.
 
 ### Journey view (the matrix)
 
@@ -101,9 +101,13 @@ The 114 journeys are **archetypal** — what steps a person typically encounters
 
 ## Deployment
 
-Target: **Cloudflare Pages** (SSR, free tier — 100k requests/day). Uses `@sveltejs/adapter-cloudflare`. Build output lands in `.svelte-kit/cloudflare/` with `_worker.js` (the SSR entry) + `_routes.json` + static assets.
+Target: **GitHub Pages** (fully static). Uses `@sveltejs/adapter-static` with `fallback: '404.html'`. Build output lands in `build/`.
 
-To hook up Pages: in the Cloudflare dashboard, create a Pages project pointing at this repo. Framework preset: SvelteKit. Build command: `npm run build`. Build output directory: `.svelte-kit/cloudflare`. Node version: 20+. No env vars or bindings needed.
+Static pages (`/`, `/methodology`, `/contact`) are prerendered via `src/routes/+layout.ts` (`prerender = true`). The dynamic `/journey/[id]` route sets `prerender = false` and relies on the SPA fallback: GitHub Pages serves `404.html` (the SPA shell) for any unknown path, and the SvelteKit client router loads the requested journey.
+
+`svelte.config.js` reads `BASE_PATH` (set by CI to `/<repo-name>`) into `kit.paths.base` so asset and route URLs resolve correctly under `https://<user>.github.io/<repo-name>/`. All internal link paths (`<a href>`, `goto(...)`, and the `fetch` of `/data/journeys.json` in `+layout.svelte`) are prefixed with `import { base } from '$app/paths'` — keep that convention when adding new routes or asset URLs.
+
+Deploy flow: `.github/workflows/deploy.yml` runs on push to `main`, builds with `BASE_PATH=/<repo-name>`, and uploads `build/` via `actions/deploy-pages`. `static/.nojekyll` suppresses Jekyll processing so SvelteKit's `_app/` directory is served as-is.
 
 ## Repo layout
 

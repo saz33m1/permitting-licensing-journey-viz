@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { app } from '$lib/stores/app.svelte';
 
 	let searchValue = $state('');
@@ -7,7 +8,7 @@
 	function handleSearchKeydown(e: KeyboardEvent) {
 		if (e.key === 'Enter' && searchValue.trim()) {
 			app.filterSearch = searchValue.trim();
-			goto('/');
+			goto(`${base}/`);
 		}
 	}
 </script>
@@ -17,7 +18,7 @@
 		<button
 			class="font-mono text-xs uppercase tracking-[1.5px] flex items-center gap-2 cursor-pointer"
 			style="color: var(--text);"
-			onclick={() => goto('/')}
+			onclick={() => goto(`${base}/`)}
 		>
 			<span style="color: var(--accent);">←</span>
 			Back

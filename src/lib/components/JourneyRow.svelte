@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { app, JC } from '$lib/stores/app.svelte';
 	import type { Journey } from '$lib/types';
 
@@ -21,7 +22,7 @@
 <button
 	class="journey-row group block w-full px-8 py-5 flex items-center justify-between border-b cursor-pointer text-left"
 	style="border-color: var(--muted);"
-	onclick={() => goto('/journey/' + journey.id)}
+	onclick={() => goto(`${base}/journey/${journey.id}`)}
 >
 	<div class="flex flex-col gap-1">
 		<h2 class="font-body text-lg font-medium" style="color: var(--ink);">{journey.name}</h2>

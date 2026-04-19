@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { app, JC } from '$lib/stores/app.svelte';
 	import JourneyRow from './JourneyRow.svelte';
 
@@ -39,7 +40,7 @@
 				Starting a business, becoming licensed in a profession or building an addition to your home. Each one requires permits and licenses from multiple levels of government. These journeys map out what that process actually looks like for the people going through it. The steps are illustrative, but the complexity they represent is not.
 			</p>
 			<div class="space-y-4">
-				<a href="/methodology" class="font-mono text-xs uppercase tracking-[1.5px] underline hover:no-underline block" style="color: var(--text);">
+				<a href="{base}/methodology" class="font-mono text-xs uppercase tracking-[1.5px] underline hover:no-underline block" style="color: var(--text);">
 					How I mapped these journeys &rarr;
 				</a>
 				<p class="font-body text-sm leading-relaxed" style="color: var(--text);">
@@ -47,7 +48,7 @@
 				</p>
 				<div class="flex flex-wrap gap-3 pt-1">
 					<a
-						href="/contact"
+						href="{base}/contact"
 						class="px-4 py-2.5 font-mono text-[11px] uppercase tracking-[1.5px] no-underline transition-opacity hover:opacity-80"
 						style="background: var(--ink); color: var(--newsprint);"
 					>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { app } from '$lib/stores/app.svelte';
 	import JourneyScreen from '$lib/components/JourneyScreen.svelte';
@@ -14,7 +15,7 @@
 			if (exists) {
 				app.selectJourney(id);
 			} else {
-				goto('/', { replaceState: true });
+				goto(`${base}/`, { replaceState: true });
 			}
 		}
 	});
@@ -22,7 +23,7 @@
 	onMount(() => {
 		function onKeydown(e: KeyboardEvent) {
 			if (e.key === 'Escape') {
-				goto('/');
+				goto(`${base}/`);
 			}
 		}
 		window.addEventListener('keydown', onKeydown);
