@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { app } from '$lib/stores/app.svelte';
 	import MatrixGrid from './MatrixGrid.svelte';
 	import NodeDetailPanel from './NodeDetailPanel.svelte';
@@ -29,7 +30,7 @@
 		searchValue = '';
 		showDropdown = false;
 		highlightIndex = -1;
-		goto('/journey/' + id);
+		goto(`${base}/journey/${id}`);
 	}
 
 	function handleSearchKeydown(e: KeyboardEvent) {
@@ -73,7 +74,7 @@
 		<!-- Journey Header -->
 		<div class="px-8 py-4 flex items-start justify-between gap-6" style="border-bottom: 1px solid var(--muted);">
 			<div class="shrink-0">
-				<a href="/" class="font-mono text-xs tracking-[1.5px] uppercase no-underline hover:underline" style="color: var(--text);">
+				<a href="{base}/" class="font-mono text-xs tracking-[1.5px] uppercase no-underline hover:underline" style="color: var(--text);">
 						Permit & License Journey Explorer
 					</a>
 				<h1 class="font-display text-3xl lg:text-4xl font-bold leading-tight mt-1" style="color: var(--ink);">

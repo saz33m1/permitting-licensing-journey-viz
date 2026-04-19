@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 </script>
 
 <svelte:head>
@@ -8,7 +9,7 @@
 <!-- HERO -->
 <section class="w-full px-6 md:px-16 py-20 md:py-32" style="background: var(--ink); color: var(--newsprint);">
 	<div class="max-w-[1200px] mx-auto">
-		<a href="/" class="font-mono text-xs uppercase tracking-[2px] inline-block mb-16 opacity-60 hover:opacity-100 transition-opacity" style="color: var(--newsprint);">
+		<a href="{base}/" class="font-mono text-xs uppercase tracking-[2px] inline-block mb-16 opacity-60 hover:opacity-100 transition-opacity" style="color: var(--newsprint);">
 			&larr; Back to Explorer
 		</a>
 		<h1 class="font-display text-5xl md:text-7xl leading-[1.05] tracking-tight mb-6">
