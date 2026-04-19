@@ -248,8 +248,8 @@
 		timeline.to(dotEl, { attr: { opacity: 0 }, duration: 0.3 });
 	}
 
-	// Realistic mode: 1 day = 0.1s, plays once, emits a status object for HUD.
-	const SEC_PER_DAY = 0.1;
+	// Realistic mode: 1 year = 1 minute, plays once, emits a status object for HUD.
+	const SEC_PER_DAY = 60 / 365;
 	const REALISTIC_TRAVEL_S = 0.5;
 
 	function buildRealisticTimeline() {
@@ -304,7 +304,7 @@
 			const node = nodeMap[p.id];
 			const w = feeWeight(p);
 			const days = nodeDays[i];
-			const dwellSec = Math.max(0.3, days * SEC_PER_DAY);
+			const dwellSec = Math.max(3, days * SEC_PER_DAY);
 			const startDay = cumDays[i];
 			const totalWeeks = days / 7;
 
