@@ -1,0 +1,32 @@
+{
+  "steps": [
+    {
+      "section": "PLAN",
+      "stepNumber": 1,
+      "name": "Plan Your ${OoS} Business",
+      "timeEstimate": "30 Days",
+      "description": "Have a strong plan in place to make later decisions and filings easier and more predictable."
+    },
+    {
+      "section": "START",
+      "stepNumber": 2,
+      "name": "Register Your ${OoS} Business",
+      "timeEstimate": "1\u20135 Days",
+      "description": "Get legally recognized by the State and federal government so you can start acting on behalf of your business."
+    },
+    {
+      "section": "START",
+      "stepNumber": 3,
+      "name": "After Registering Your ${OoS} Business",
+      "timeEstimate": "30\u201360 Days",
+      "description": "Enter insurance and/or location agreements in your business's name to protect both you and your business legally."
+    },
+    {
+      "section": "START",
+      "stepNumber": 4,
+      "name": "Before Opening Your Site in New Jersey",
+      "timeEstimate": "30\u201360 Days",
+      "description": "Obtain industry-specific approvals or inspections to make sure you're in compliance with State or local laws before opening."
+    }
+  ]
+}

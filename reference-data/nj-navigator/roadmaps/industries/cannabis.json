@@ -1,0 +1,109 @@
+{
+  "naicsCodes": "111419, 111998, 424590, 459991",
+  "defaultSectorId": "cannabis",
+  "canHavePermanentLocation": false,
+  "roadmapSteps": [
+    {
+      "step": 1,
+      "weight": 3,
+      "task": "cannabis-evaluate-location"
+    },
+    {
+      "step": 1,
+      "weight": 50,
+      "task": "determine-naics-code",
+      "required": true
+    },
+    {
+      "step": 1,
+      "weight": 100,
+      "task": "business-structure",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 20,
+      "task": "register-for-ein",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 25,
+      "task": "register-for-taxes",
+      "required": true
+    },
+    {
+      "step": 3,
+      "weight": 1,
+      "task": "cannabis-bank-account"
+    },
+    {
+      "step": 3,
+      "weight": 2,
+      "task": "cannabis-insurance-policy"
+    },
+    {
+      "step": 3,
+      "weight": 3,
+      "task": "priority-status-cannabis",
+      "required": true
+    },
+    {
+      "step": 3,
+      "weight": 5,
+      "task": "zoning-cannabis",
+      "required": true
+    },
+    {
+      "step": 3,
+      "weight": 6,
+      "task": "cannabis-sign-lease"
+    },
+    {
+      "weight": 7,
+      "step": 3,
+      "task": "cannabis-site-requirements"
+    },
+    {
+      "step": 3,
+      "weight": 8,
+      "task": "building-permit"
+    },
+    {
+      "step": 4,
+      "weight": 35,
+      "licenseTask": "town-mercantile-license"
+    },
+    {
+      "step": 4,
+      "weight": 99,
+      "task": "manage-business-vehicles"
+    },
+    {
+      "step": 4,
+      "weight": 36,
+      "task": "env-requirements",
+      "required": false
+    }
+  ],
+  "name": "Cannabis",
+  "nonEssentialQuestionsIds": [
+    "weights-measures",
+    "inspect-boiler",
+    "business-vehicle-irp",
+    "inspect-pv",
+    "inspect-fridge",
+    "bus-initial-inspection",
+    "cdl-neq"
+  ],
+  "displayname": "cannabis",
+  "industryOnboardingQuestions": {
+    "isCannabisLicenseTypeApplicable": true
+  },
+  "modifications": [],
+  "isEnabled": true,
+  "additionalSearchTerms": "marijuana, ATC, cannabis business, micro license, cultivation, cultivator, dispensary, grow, retail, pot, weed, manufacturer, wholesaler, distributor, retailer, delivery",
+  "id": "cannabis",
+  "description": "A business that manufactures, delivers, or sells cannabis",
+  "webflowId": "656a1362657b7f011c19dc79"
+}

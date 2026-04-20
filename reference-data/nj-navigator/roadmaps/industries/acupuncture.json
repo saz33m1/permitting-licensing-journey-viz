@@ -1,0 +1,74 @@
+{
+  "naicsCodes": "621399",
+  "defaultSectorId": "health-care-and-social-assistance",
+  "canHavePermanentLocation": true,
+  "roadmapSteps": [
+    {
+      "step": 1,
+      "weight": 1,
+      "task": "business-plan"
+    },
+    {
+      "step": 1,
+      "weight": 50,
+      "task": "determine-naics-code",
+      "required": true
+    },
+    {
+      "step": 1,
+      "weight": 100,
+      "task": "business-structure",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 20,
+      "task": "register-for-ein",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 25,
+      "task": "register-for-taxes",
+      "required": true
+    },
+    {
+      "step": 3,
+      "weight": 10,
+      "task": "bank-account"
+    },
+    {
+      "step": 3,
+      "weight": 15,
+      "task": "get-insurance"
+    },
+    {
+      "step": 4,
+      "weight": 99,
+      "task": "manage-business-vehicles"
+    },
+    {
+      "step": 4,
+      "licenseTask": "rmw-generator-registration",
+      "required": true,
+      "weight": 3
+    },
+    {
+      "step": 4,
+      "weight": 1,
+      "licenseTask": "license-acupuncture",
+      "required": true
+    }
+  ],
+  "name": "Acupuncture",
+  "nonEssentialQuestionsIds": [],
+  "displayname": "acupuncture",
+  "industryOnboardingQuestions": {
+    "canBeHomeBased": true
+  },
+  "isEnabled": true,
+  "additionalSearchTerms": "acupuncturist, spa, alternative medicine",
+  "id": "acupuncture",
+  "description": "Traditional Chinese medicine involving the insertion of needles into the body",
+  "webflowId": "656a136266a0b2c046a17462"
+}

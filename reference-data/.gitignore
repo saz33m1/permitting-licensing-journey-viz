@@ -1,0 +1,6 @@
+# Large binary files -- download separately per SUMMARY.md instructions
+*.mdb
+*.zip
+*.xlsx
+*.docx
+*.html
