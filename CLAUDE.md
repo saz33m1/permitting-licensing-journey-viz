@@ -2,11 +2,20 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+
 ## What This Is
 
 An animated, data-driven visualization showing how 114 real-world journeys (opening a restaurant, becoming a nurse, hosting a street festival, etc.) each require permits, licenses, and compliance steps scattered across **federal, state, and local government**. Part of **Catalyst** — an open-source Permitting & Licensing platform.
 
 The visualization is an "editorial-grade" dashboard: newspaper-inspired aesthetic, a 4-phase × 3-jurisdiction matrix, Newsreader serif + IBM Plex typography, zero-radius, muted palette. See `docs/prd.html` for the product spec.
+
+## Git & Commit Rules
+
+- Do not add `Co-Authored-By: Claude` or any co-author trailer.
+- Do not add `Generated with Claude Code` or similar footers.
+- Do not mention Claude, AI, or assistants in commit messages, PR titles, PR descriptions, or issue bodies.
+- Commits and PRs must read as if written solely by the user.
+
 
 ## Stack
 
@@ -51,7 +60,7 @@ Types are declared in `src/lib/types.ts`. Note `PlcNode` carries extended metada
 
 `src/lib/stores/app.svelte.ts` is a **singleton Svelte 5 rune store**. Pattern: module-level `$state` locals + a single exported `app` object exposing getters/setters/methods. Holds:
 
-- Selection: `active` (journey id), `selectedNode` (node id), `viewMode` (`'standard'` | `'dependency'`)
+- Selection: `active` (journey id), `selectedNode` (node id), `viewMode` (`'standard'` | `'dependency'`), `depMode` (`'ambient'` | `'realistic'`, only meaningful when `viewMode === 'dependency'`; the `viewMode` setter resets `depMode` to `'ambient'` when leaving dependency view)
 - Filters: `filterJurisdictions`, `filterCategories`, `filterSearch`
 - Loaded data + indexed lookups: `journeys`, `plcNodes`, `categories`, `jurisdictions`, `nodeMap`, `catName`
 - Derived: `activeJourney`, `filteredJourneys`
@@ -63,8 +72,9 @@ Also exports `JC` (jurisdiction color hex map), `PHASE_LABELS`, `PHASES`, `JURIS
 | Route | Component | Notes |
 |---|---|---|
 | `/` | `HomeScreen` | Filter panel + journey list |
-| `/journey/[id]` | `JourneyScreen` | 2D matrix view; invalid `[id]` redirects to `/`; Esc returns home |
+| `/journey/[id]` | `JourneyScreen` | 2D matrix view + dependency overlay view; invalid `[id]` redirects to `/`; Esc returns home |
 | `/methodology` | static page | Explains the 4 phases, dependency ordering, sources, caveats |
+| `/contact` | static page | Formspree-backed contact form with success/error states |
 
 `src/routes/+layout.ts` sets `prerender = true`; the dynamic `/journey/[id]` route opts out via its own `+page.ts` (`prerender = false`) and is served through the SPA fallback at build time.
 
@@ -73,6 +83,11 @@ Also exports `JC` (jurisdiction color hex map), `PHASE_LABELS`, `PHASES`, `JURIS
 `MatrixGrid` renders a 4 × 3 grid (phases × jurisdictions). `lib/utils/matrix.ts` (`computeMatrix`) bins a journey's steps into the 12 cells keyed `"${jurisdiction}-${phase}"`. Each cell contains `NodeCard`s; selecting one opens `NodeDetailPanel` (agency, fee, renewal, description, etc.).
 
 `FlowPathOverlay` draws an animated dependency path **over** the grid: `lib/utils/pathCalc.ts` measures DOM positions via `[data-node-id]` query, builds a cubic-bezier SVG with horizontal-biased S-curves for cross-column links and offset curves for same-column links (to avoid overlaps), and GSAP animates it.
+
+The dependency view has two sub-modes, controlled by `depMode`:
+
+- **Ambient** — looped tour with per-journey tempo. Travel is constant-speed via per-segment `motionPath`; dwells are log-scaled off node `estTime`/`fee`/`blocking`/`required`, and the full loop is normalized to 10–40s so every journey stays watchable.
+- **Realistic** — plays once at `1 day = 0.1s`, surfacing the literal bureaucratic duration. `RealisticHUD.svelte` renders a Day/Week counter and a Replay button.
 
 ### Design tokens
 
@@ -113,9 +128,9 @@ Deploy flow: `.github/workflows/deploy.yml` runs on push to `master`, builds wit
 
 ```
 ├── src/
-│   ├── routes/                  ← /, /journey/[id], /methodology
+│   ├── routes/                  ← /, /journey/[id], /methodology, /contact
 │   ├── lib/
-│   │   ├── components/          ← HomeScreen, JourneyScreen, MatrixGrid, NodeCard, NodeDetailPanel, FlowPathOverlay, TopNavbar, JourneyRow
+│   │   ├── components/          ← HomeScreen, JourneyScreen, MatrixGrid, NodeCard, NodeDetailPanel, FlowPathOverlay, RealisticHUD, TopNavbar, JourneyRow
 │   │   ├── components/ui/       ← shadcn-svelte primitives (generated)
 │   │   ├── stores/app.svelte.ts ← singleton rune store
 │   │   ├── utils/{matrix,pathCalc}.ts
