@@ -10,10 +10,12 @@
 
 	let {
 		status,
-		onReplay
+		onReplay,
+		mobile = false
 	}: {
 		status: RealisticStatus;
 		onReplay: () => void;
+		mobile?: boolean;
 	} = $props();
 
 	const dayDisplay = $derived(Math.max(0, Math.floor(status.day)));
@@ -29,8 +31,8 @@
 </script>
 
 <div
-	class="absolute flex flex-col gap-1 px-4 py-3 pointer-events-auto"
-	style="top: 8px; right: 8px; z-index: 20; background: var(--surface); border: 1px solid var(--ink); min-width: 220px; box-shadow: 0 2px 6px rgba(0,0,0,.08);"
+	class="{mobile ? 'fixed left-3 right-3 bottom-3 px-3 py-2' : 'absolute px-4 py-3'} flex flex-col gap-1 pointer-events-auto"
+	style="{mobile ? 'z-index: 90;' : 'top: 8px; right: 8px; z-index: 20; min-width: 220px;'} background: var(--surface); border: 1px solid var(--ink); box-shadow: 0 2px 6px rgba(0,0,0,.08);"
 >
 	{#if status.finished}
 		<span
