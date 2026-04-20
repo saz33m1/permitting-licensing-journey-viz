@@ -1,0 +1,36 @@
+{
+  "description": "Universal and category-specific dependency rules. Used to validate journey dependencies and auto-populate edges for new journeys. If both nodes in 'if_both_present' appear in a journey's steps, the dependency edge in 'then' must exist (or an explicit exception must be documented).",
+  "universalRules": [
+    { "if_both_present": ["ein", "biz_reg"], "then": { "from": "ein", "to": "biz_reg", "type": "hard" }, "reason": "EIN required for state business entity registration" },
+    { "if_both_present": ["biz_reg", "state_tax"], "then": { "from": "biz_reg", "to": "state_tax", "type": "hard" }, "reason": "Business entity must exist before state tax registration" },
+    { "if_both_present": ["biz_reg", "sales_tax"], "then": { "from": "biz_reg", "to": "sales_tax", "type": "hard" }, "reason": "Business entity must exist before sales tax permit" },
+    { "if_both_present": ["biz_reg", "workers_comp"], "then": { "from": "biz_reg", "to": "workers_comp", "type": "hard" }, "reason": "Registered entity required to obtain workers comp insurance" },
+    { "if_both_present": ["biz_reg", "zoning"], "then": { "from": "biz_reg", "to": "zoning", "type": "hard" }, "reason": "Business entity required before zoning application" },
+    { "if_both_present": ["zoning", "building"], "then": { "from": "zoning", "to": "building", "type": "hard" }, "reason": "Zoning approval required before building permit application" },
+    { "if_both_present": ["building", "fire_insp"], "then": { "from": "building", "to": "fire_insp", "type": "hard" }, "reason": "Building permit must be issued before fire inspection" },
+    { "if_both_present": ["building", "health_insp"], "then": { "from": "building", "to": "health_insp", "type": "hard" }, "reason": "Building permit must be issued before health inspection" },
+    { "if_both_present": ["building", "cert_occ"], "then": { "from": "building", "to": "cert_occ", "type": "hard" }, "reason": "Building must pass inspections before certificate of occupancy" },
+    { "if_both_present": ["fire_insp", "cert_occ"], "then": { "from": "fire_insp", "to": "cert_occ", "type": "hard" }, "reason": "Fire inspection clearance required for certificate of occupancy" },
+    { "if_both_present": ["zoning", "health_insp"], "then": { "from": "zoning", "to": "health_insp", "type": "hard" }, "reason": "Location must be zoned before health inspection" },
+    { "if_both_present": ["fire_insp", "biz_license"], "then": { "from": "fire_insp", "to": "biz_license", "type": "hard" }, "reason": "Fire clearance required before business license issuance" },
+    { "if_both_present": ["health_insp", "biz_license"], "then": { "from": "health_insp", "to": "biz_license", "type": "hard" }, "reason": "Health clearance required before business license issuance" },
+    { "if_both_present": ["cert_occ", "biz_license"], "then": { "from": "cert_occ", "to": "biz_license", "type": "hard" }, "reason": "Certificate of occupancy required before business license" },
+    { "if_both_present": ["zoning", "signage"], "then": { "from": "zoning", "to": "signage", "type": "hard" }, "reason": "Signage must comply with zoning" },
+    { "if_both_present": ["bg_check", "prof_lic"], "then": { "from": "bg_check", "to": "prof_lic", "type": "hard" }, "reason": "Background check must clear before professional license issued" },
+    { "if_both_present": ["prof_lic", "liability_ins"], "then": { "from": "prof_lic", "to": "liability_ins", "type": "hard" }, "reason": "Professional license required before professional liability insurance" },
+    { "if_both_present": ["bg_check", "foster_care"], "then": { "from": "bg_check", "to": "foster_care", "type": "hard" }, "reason": "Background check required before foster care license" },
+    { "if_both_present": ["env_review", "building"], "then": { "from": "env_review", "to": "building", "type": "hard" }, "reason": "Environmental review required before building permit" },
+    { "if_both_present": ["zoning", "demolition"], "then": { "from": "zoning", "to": "demolition", "type": "hard" }, "reason": "Zoning approval before demolition permit" },
+    { "if_both_present": ["event_permit", "street_close"], "then": { "from": "event_permit", "to": "street_close", "type": "hard" }, "reason": "Event permit required before street closure" },
+    { "if_both_present": ["film_permit", "street_close"], "then": { "from": "film_permit", "to": "street_close", "type": "hard" }, "reason": "Film permit required before street closure" },
+    { "if_both_present": ["env_review", "water_rights"], "then": { "from": "env_review", "to": "water_rights", "type": "hard" }, "reason": "Environmental review before water appropriation" }
+  ],
+  "categoryRules": [
+    { "categories": ["food"], "if_both_present": ["state_health", "health_insp"], "then": { "from": "state_health", "to": "health_insp", "type": "hard" }, "reason": "State health license before local health inspection for food" },
+    { "categories": ["trades", "proflic"], "if_both_present": ["prof_lic", "contr_lic"], "then": { "from": "prof_lic", "to": "contr_lic", "type": "hard" }, "reason": "Trade license required before contractor license" },
+    { "categories": ["health"], "if_both_present": ["dea", "pharmacy_lic"], "then": { "from": "dea", "to": "pharmacy_lic", "type": "hard" }, "reason": "DEA registration before pharmacy license" },
+    { "categories": ["specialty"], "if_both_present": ["cannabis", "special_use"], "then": { "from": "cannabis", "to": "special_use", "type": "hard" }, "reason": "State cannabis license before local special use" },
+    { "categories": ["bldg"], "if_both_present": ["contr_lic", "building"], "then": { "from": "contr_lic", "to": "building", "type": "hard" }, "reason": "Contractor license required before pulling building permit" },
+    { "categories": ["events"], "if_both_present": ["fire_marshal", "event_permit"], "then": { "from": "fire_marshal", "to": "event_permit", "type": "hard" }, "reason": "Fire marshal approval before event permit for large gatherings" }
+  ]
+}
