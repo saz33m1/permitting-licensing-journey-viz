@@ -1,0 +1,121 @@
+{
+  "naicsCodes": "722330",
+  "defaultSectorId": "accommodation-and-food-services",
+  "canHavePermanentLocation": false,
+  "roadmapSteps": [
+    {
+      "step": 1,
+      "weight": 1,
+      "task": "business-plan"
+    },
+    {
+      "step": 1,
+      "weight": 3,
+      "task": "evaluate-your-location"
+    },
+    {
+      "step": 1,
+      "weight": 50,
+      "task": "determine-naics-code",
+      "required": true
+    },
+    {
+      "step": 1,
+      "weight": 100,
+      "task": "business-structure",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 20,
+      "task": "register-for-ein",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 25,
+      "task": "register-for-taxes",
+      "required": true
+    },
+    {
+      "step": 3,
+      "weight": 1,
+      "task": "bank-account"
+    },
+    {
+      "step": 3,
+      "weight": 2,
+      "licenseTask": "apply-for-food-truck-license",
+      "required": true
+    },
+    {
+      "step": 3,
+      "weight": 3,
+      "task": "zoning-food-truck"
+    },
+    {
+      "step": 3,
+      "weight": 3,
+      "task": "sign-lease-food-truck"
+    },
+    {
+      "step": 3,
+      "weight": 7,
+      "task": "get-insurance"
+    },
+    {
+      "step": 4,
+      "weight": 1,
+      "task": "transportation-entity-id",
+      "required": true
+    },
+    {
+      "step": 4,
+      "weight": 2,
+      "task": "mvc-title-task",
+      "required": true
+    },
+    {
+      "step": 4,
+      "weight": 3,
+      "task": "mvc-registration-task",
+      "required": true
+    },
+    {
+      "step": 4,
+      "weight": 4,
+      "licenseTask": "fire-permit-food-truck",
+      "required": true
+    },
+    {
+      "step": 4,
+      "weight": 5,
+      "licenseTask": "town-mercantile-license"
+    },
+    {
+      "step": 4,
+      "weight": 6,
+      "task": "resale-tax-certificate-operating"
+    },
+    {
+      "step": 4,
+      "weight": 7,
+      "licenseTask": "food-safety-course"
+    },
+    {
+      "weight": 8,
+      "step": 4,
+      "task": "trucking-cdl",
+      "required": true
+    }
+  ],
+  "name": "Food Truck",
+  "nonEssentialQuestionsIds": ["weights-measures"],
+  "displayname": "food-truck",
+  "industryOnboardingQuestions": {},
+  "isEnabled": true,
+  "additionalSearchTerms": "lunch wagon,food service truck,street food,food cart,fast food cart, food vendor",
+  "id": "food-truck",
+  "description": "A vehicle where food or beverages are transported, stored, or prepared for sale at temporary locations",
+  "webflowId": "656a136253b505573055370f"
+}
