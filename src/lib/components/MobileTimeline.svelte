@@ -10,7 +10,7 @@
 		MOBILE_AMBIENT_TRAVEL_S,
 		type RealisticStatus
 	} from '$lib/utils/timeline';
-	import type { PlcNode } from '$lib/types';
+	import type { PlcNode, Dependency } from '$lib/types';
 
 	export interface StepEvent {
 		index: number;
@@ -21,6 +21,7 @@
 	let {
 		steps,
 		nodeMap,
+		dependencies,
 		mode = 'ambient',
 		restartKey = 0,
 		onStatus,
@@ -28,11 +29,13 @@
 	}: {
 		steps: string[];
 		nodeMap: Record<string, PlcNode>;
+		dependencies?: Dependency[];
 		mode?: 'ambient' | 'realistic';
 		restartKey?: number;
 		onStatus?: (s: RealisticStatus) => void;
 		onStep?: (e: StepEvent | null) => void;
 	} = $props();
+
 
 	let timeline: gsap.core.Timeline | null = null;
 
