@@ -1,0 +1,89 @@
+{
+  "naicsCodes": "459920, 441330, 445320, 459210, 458110, 445131, 456120, 455110, 449210, 445250, 449121, 459310, 456191, 449110, 459420, 444140, 459120, 458310, 458320, 445240, 441227, 459140, 444240, 459410, 456130, 444180, 444230, 459910, 459130, 458210, 459110, 441340, 459991, 459510, 455211, 449122, 455219, 456199, 449129, 459999, 445298",
+  "defaultSectorId": "retail-trade-and-ecommerce",
+  "canHavePermanentLocation": true,
+  "roadmapSteps": [
+    {
+      "step": 1,
+      "weight": 1,
+      "task": "business-plan"
+    },
+    {
+      "step": 1,
+      "weight": 50,
+      "task": "determine-naics-code",
+      "required": true
+    },
+    {
+      "step": 1,
+      "weight": 100,
+      "task": "business-structure",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 20,
+      "task": "register-for-ein",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 25,
+      "task": "register-for-taxes",
+      "required": true
+    },
+    {
+      "step": 3,
+      "weight": 10,
+      "task": "bank-account"
+    },
+    {
+      "step": 3,
+      "weight": 15,
+      "task": "get-insurance"
+    },
+    {
+      "step": 4,
+      "weight": 10,
+      "task": "search-licenses-retail"
+    },
+    {
+      "step": 4,
+      "weight": 14,
+      "task": "env-requirements",
+      "required": false
+    },
+    {
+      "step": 4,
+      "weight": 20,
+      "task": "resale-tax-certificate-operating"
+    },
+    {
+      "step": 4,
+      "weight": 99,
+      "task": "manage-business-vehicles"
+    }
+  ],
+  "name": "Retail",
+  "nonEssentialQuestionsIds": [
+    "ticket-broker-resell",
+    "weights-measures",
+    "cigarette-manufacture-sell",
+    "other-businesses-CRTK-survey",
+    "retail-pesticide-dealer-licensing",
+    "inspect-boiler",
+    "business-vehicle-irp",
+    "inspect-pv",
+    "inspect-fridge",
+    "sell-milk-question",
+    "cdl-neq",
+    "streamlined-sales-tax-registration"
+  ],
+  "displayname": "retail",
+  "industryOnboardingQuestions": {},
+  "isEnabled": true,
+  "additionalSearchTerms": "clothing, clothing accessories, store, reseller, outlet, shop, thrift store, candle store, crafts/hobby store, clothing store, consignment, boutique, sales, grocery store, food retail, flower shop, florist, custom frames, deli, convenience store, candy store, jewelry store, apparel retail, thrift store, gift shop, bike shop, bookstore, yarn shop, goods retail, accessories retail, ",
+  "id": "retail",
+  "description": "Selling or reselling goods in a brick and mortar location outside of your home",
+  "webflowId": "656a13629d57077e647ddf9f"
+}
