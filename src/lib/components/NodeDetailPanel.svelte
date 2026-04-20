@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { app, JC } from '$lib/stores/app.svelte';
+	import { IsMobile } from '$lib/hooks/is-mobile.svelte.js';
 	import type { PlcNode } from '$lib/types';
+
+	const isMobile = new IsMobile();
 
 	let { node, stepIndex, totalSteps }: { node: PlcNode; stepIndex?: number; totalSteps?: number } = $props();
 
@@ -19,11 +22,17 @@
 
 <!-- Panel -->
 <aside
-	class="fixed top-0 right-0 h-full w-[480px] z-[100] overflow-y-auto flex flex-col panel-enter"
-	style="background: var(--surface); border-left: 2px solid var(--ink); box-shadow: -10px 0 30px rgba(0,0,0,0.1);"
+	class="fixed z-[100] overflow-y-auto flex flex-col {isMobile.current ? 'bottom-0 left-0 right-0 w-full max-h-[85vh] panel-enter-mobile' : 'top-0 right-0 h-full w-[480px] panel-enter'}"
+	style="background: var(--surface); {isMobile.current ? 'border-top: 2px solid var(--ink); box-shadow: 0 -10px 30px rgba(0,0,0,0.1);' : 'border-left: 2px solid var(--ink); box-shadow: -10px 0 30px rgba(0,0,0,0.1);'}"
 >
+	{#if isMobile.current}
+		<!-- Grabber -->
+		<div class="flex justify-center pt-2 pb-1 shrink-0" style="background: var(--surface);">
+			<div class="w-9 h-1" style="background: var(--muted);"></div>
+		</div>
+	{/if}
 	<!-- Sticky Header -->
-	<div class="p-8 flex flex-col gap-6 sticky top-0 z-10" style="background: var(--surface); border-bottom: 1px solid var(--muted);">
+	<div class="p-6 md:p-8 flex flex-col gap-4 md:gap-6 sticky top-0 z-10" style="background: var(--surface); border-bottom: 1px solid var(--muted);">
 		<div class="flex justify-between items-start">
 			<div class="flex flex-wrap gap-2">
 				<span
@@ -55,7 +64,7 @@
 			</div>
 		</div>
 		<div>
-			<h3 class="font-body text-3xl font-bold leading-tight" style="color: var(--ink);">{node.name}</h3>
+			<h3 class="font-body text-2xl md:text-3xl font-bold leading-tight" style="color: var(--ink);">{node.name}</h3>
 			{#if node.agency}
 				<p class="font-mono text-xs mt-3 tracking-wide uppercase" style="color: var(--text);">{node.agency}</p>
 			{/if}
@@ -63,7 +72,7 @@
 	</div>
 
 	<!-- Body -->
-	<div class="p-8 space-y-10 flex-1">
+	<div class="p-6 md:p-8 space-y-6 md:space-y-10 flex-1">
 		<!-- Description -->
 		{#if node.description}
 			<section>
@@ -137,12 +146,25 @@
 		animation: slideIn 0.3s ease-out;
 	}
 
+	.panel-enter-mobile {
+		animation: slideUp 0.3s ease-out;
+	}
+
 	@keyframes slideIn {
 		from {
 			transform: translateX(100%);
 		}
 		to {
 			transform: translateX(0);
+		}
+	}
+
+	@keyframes slideUp {
+		from {
+			transform: translateY(100%);
+		}
+		to {
+			transform: translateY(0);
 		}
 	}
 </style>

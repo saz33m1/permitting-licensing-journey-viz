@@ -8,18 +8,20 @@
 		buildSegmentPaths,
 		type NodePosition
 	} from '$lib/utils/pathCalc';
+	import {
+		computeDwell,
+		feeWeight,
+		LOOP_MIN_S,
+		LOOP_MAX_S,
+		TRAVEL_PX_PER_SEC,
+		SEC_PER_DAY,
+		REALISTIC_TRAVEL_S,
+		prefersReducedMotion,
+		type RealisticStatus
+	} from '$lib/utils/timeline';
 	import type { PlcNode } from '$lib/types';
 
 	gsap.registerPlugin(MotionPathPlugin);
-
-	interface RealisticStatus {
-		day: number;
-		nodeId: string | null;
-		nodeName: string | null;
-		weeksInStep: number;
-		totalWeeksInStep: number;
-		finished: boolean;
-	}
 
 	let {
 		containerEl,
@@ -56,9 +58,6 @@
 	let resizeObs: ResizeObserver | null = null;
 	let activeNodeId: string | null = null;
 
-	const LOOP_MIN_S = 10;
-	const LOOP_MAX_S = 40;
-
 	function recalculate() {
 		if (!containerEl) return;
 		positions = measureNodePositions(containerEl, steps, nodeMap);
@@ -68,26 +67,9 @@
 		svgH = containerEl.scrollHeight;
 	}
 
-	function computeDwell(p: NodePosition): number {
-		const base = 0.3;
-		const timeFactor = p.weeks != null ? Math.log10(p.weeks + 1) * 1.4 : 0.25;
-		const blockingBonus = p.blocking ? 1.2 : 0;
-		const requiredDamp = p.required ? 1 : 0.45;
-		return (base + timeFactor + blockingBonus) * requiredDamp;
-	}
-
-	// Pure distance-proportional travel — gives constant visual speed across
-	// segments regardless of length. No constant offset, so short segments stay
-	// short and long ones take proportionally longer.
-	const TRAVEL_PX_PER_SEC = 280;
 	function computeTravel(a: NodePosition, b: NodePosition): number {
 		const dist = Math.hypot(b.cx - a.cx, b.cy - a.cy);
 		return Math.max(0.15, dist / TRAVEL_PX_PER_SEC);
-	}
-
-	function feeWeight(p: NodePosition): number {
-		if (p.feeUsd == null) return 0.15;
-		return Math.min(0.8, Math.log10(p.feeUsd + 1) / 5);
 	}
 
 	function setGlow(id: string | null) {
@@ -118,11 +100,6 @@
 			duration: 0.7 + w * 0.5,
 			ease: 'power2.out'
 		});
-	}
-
-	function prefersReducedMotion(): boolean {
-		if (typeof window === 'undefined') return false;
-		return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 	}
 
 	function snapDotToFirstNode() {
@@ -249,9 +226,6 @@
 	}
 
 	// Realistic mode: 1 year = 1 minute, plays once, emits a status object for HUD.
-	const SEC_PER_DAY = 60 / 365;
-	const REALISTIC_TRAVEL_S = 0.5;
-
 	function buildRealisticTimeline() {
 		if (!dotEl) return;
 		const n = positions.length;

@@ -2,7 +2,7 @@
 	import { app, JC } from '$lib/stores/app.svelte';
 	import type { PlcNode } from '$lib/types';
 
-	let { node, stepIndex }: { node: PlcNode; stepIndex?: number } = $props();
+	let { node, stepIndex, mobile = false }: { node: PlcNode; stepIndex?: number; mobile?: boolean } = $props();
 
 	function handleClick() {
 		app.selectedNode = app.selectedNode === node.id ? null : node.id;
@@ -20,7 +20,7 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="node-card w-[160px] p-2 cursor-pointer transition-all relative"
+	class="node-card {mobile ? 'w-full' : 'w-[160px]'} p-2 cursor-pointer transition-all relative"
 	style="border: {isSelected ? '2px' : '1px'} solid var(--ink); background: {isSelected ? 'var(--surface)' : 'var(--newsprint)'};"
 	data-node-id={node.id}
 	onclick={handleClick}
