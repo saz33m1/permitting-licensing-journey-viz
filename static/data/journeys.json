@@ -1,1 +1,103 @@
-PLACEHOLDER_WILL_FAIL
+{
+  "jurisdictions": [
+    {
+      "id": "federal",
+      "name": "Federal"
+    },
+    {
+      "id": "state",
+      "name": "State"
+    },
+    {
+      "id": "local",
+      "name": "Local (City / County)"
+    }
+  ],
+  "categories": [
+    {
+      "id": "food",
+      "name": "Food & Beverage"
+    },
+    {
+      "id": "retail",
+      "name": "Retail & Services"
+    },
+    {
+      "id": "health",
+      "name": "Health & Wellness"
+    },
+    {
+      "id": "childcare",
+      "name": "Childcare & Education"
+    },
+    {
+      "id": "trades",
+      "name": "Construction Trades"
+    },
+    {
+      "id": "profsvc",
+      "name": "Professional Services"
+    },
+    {
+      "id": "transport",
+      "name": "Transportation"
+    },
+    {
+      "id": "animal",
+      "name": "Animal Services"
+    },
+    {
+      "id": "specialty",
+      "name": "Specialty & Regulated"
+    },
+    {
+      "id": "proflic",
+      "name": "Professional & Occupational Licensing"
+    },
+    {
+      "id": "bldg",
+      "name": "Building & Construction Projects"
+    },
+    {
+      "id": "landuse",
+      "name": "Land Use & Development"
+    },
+    {
+      "id": "events",
+      "name": "Events & Temporary Permits"
+    },
+    {
+      "id": "housing",
+      "name": "Residential & Housing"
+    },
+    {
+      "id": "envag",
+      "name": "Environmental & Agriculture"
+    }
+  ],
+  "plcNodes": [
+    {
+      "id": "ein",
+      "name": "EIN Registration",
+      "jurisdiction": "federal",
+      "phase": "preparation",
+      "agency": "Internal Revenue Service (IRS)",
+      "description": "Employer Identification Number and federal tax registration. Required for all business entities for tax reporting, employment tax obligations, and employee hiring.",
+      "fee": "Free",
+      "estTime": "1-2 Weeks",
+      "renewalTerm": null,
+      "required": true
+    },
+    {
+      "id": "fda",
+      "name": "FDA Registration",
+      "jurisdiction": "federal",
+      "phase": "application",
+      "agency": "Food & Drug Administration (FDA)",
+      "description": "Facility registration required for businesses manufacturing, processing, packing, or holding food for human or animal consumption.",
+      "fee": "$5,672",
+      "estTime": "4-8 Weeks",
+      "renewalTerm": "Biennial",
+      "required": true
+    }]
+}
