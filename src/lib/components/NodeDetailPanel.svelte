@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { app, JC } from '$lib/stores/app.svelte';
 	import { IsMobile } from '$lib/hooks/is-mobile.svelte.js';
-	import type { PlcNode } from '$lib/types';
+	import { isEntryPoint } from '$lib/utils/topoSort';
+	import type { PlcNode, Dependency } from '$lib/types';
 
 	const isMobile = new IsMobile();
 
@@ -9,6 +10,34 @@
 
 	const jurLabel = $derived(node.jurisdiction.charAt(0).toUpperCase() + node.jurisdiction.slice(1));
 	const jurColor = $derived(JC[node.jurisdiction] ?? '#666');
+
+	const deps = $derived(app.activeJourney?.dependencies ?? []);
+
+	interface EdgeRef { nodeId: string; name: string; type: Dependency['type'] }
+
+	const requires = $derived.by<EdgeRef[]>(() => {
+		const out: EdgeRef[] = [];
+		for (const e of deps) {
+			if (e.to !== node.id) continue;
+			const n = app.nodeMap[e.from];
+			if (!n) continue;
+			out.push({ nodeId: e.from, name: n.name, type: e.type });
+		}
+		return out;
+	});
+
+	const unblocks = $derived.by<EdgeRef[]>(() => {
+		const out: EdgeRef[] = [];
+		for (const e of deps) {
+			if (e.from !== node.id) continue;
+			const n = app.nodeMap[e.to];
+			if (!n) continue;
+			out.push({ nodeId: e.to, name: n.name, type: e.type });
+		}
+		return out;
+	});
+
+	const isEntry = $derived(deps.length > 0 && isEntryPoint(node.id, deps));
 
 	function close() {
 		app.selectedNode = null;
@@ -132,9 +161,52 @@
 					<div>
 						<p class="font-body text-sm font-medium" style="color: var(--ink);">Step {stepIndex + 1} of {totalSteps}</p>
 						<p class="font-mono text-xs mt-0.5" style="color: var(--text);">
-							{stepIndex === 0 ? 'First step in journey' : stepIndex === totalSteps - 1 ? 'Final step in journey' : 'Mid-journey step'}
+							{isEntry ? 'Start here — no prerequisites' : stepIndex === totalSteps - 1 ? 'Final step in journey' : 'Mid-journey step'}
 						</p>
 					</div>
+				</div>
+			</section>
+		{/if}
+
+		<!-- Dependencies -->
+		{#if requires.length > 0 || unblocks.length > 0}
+			<section>
+				<h4 class="font-mono text-[11px] font-bold uppercase tracking-[0.2em] mb-4" style="color: var(--text);">Dependencies</h4>
+				<div class="grid grid-cols-1 gap-4">
+					{#if requires.length > 0}
+						<div class="p-4" style="border: 1px solid var(--muted);">
+							<p class="font-mono text-[10px] uppercase mb-3" style="color: var(--text);">Requires</p>
+							<ul class="flex flex-col gap-2">
+								{#each requires as r (r.nodeId)}
+									<li class="flex items-center gap-2 font-body text-sm" style="color: var(--ink);">
+										<span
+											class="shrink-0 inline-block w-4 h-[1.5px]"
+											style="background: {r.type === 'hard' ? 'var(--ink)' : r.type === 'soft' ? 'var(--text)' : 'var(--muted)'};"
+										></span>
+										<span>{r.name}</span>
+										<span class="font-mono text-[10px] uppercase ml-auto" style="color: var(--text);">{r.type}</span>
+									</li>
+								{/each}
+							</ul>
+						</div>
+					{/if}
+					{#if unblocks.length > 0}
+						<div class="p-4" style="border: 1px solid var(--muted);">
+							<p class="font-mono text-[10px] uppercase mb-3" style="color: var(--text);">Unblocks</p>
+							<ul class="flex flex-col gap-2">
+								{#each unblocks as u (u.nodeId)}
+									<li class="flex items-center gap-2 font-body text-sm" style="color: var(--ink);">
+										<span
+											class="shrink-0 inline-block w-4 h-[1.5px]"
+											style="background: {u.type === 'hard' ? 'var(--ink)' : u.type === 'soft' ? 'var(--text)' : 'var(--muted)'};"
+										></span>
+										<span>{u.name}</span>
+										<span class="font-mono text-[10px] uppercase ml-auto" style="color: var(--text);">{u.type}</span>
+									</li>
+								{/each}
+							</ul>
+						</div>
+					{/if}
 				</div>
 			</section>
 		{/if}

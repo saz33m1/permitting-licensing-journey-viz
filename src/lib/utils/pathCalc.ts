@@ -122,3 +122,13 @@ export function buildSegmentPaths(positions: NodePosition[]): string[] {
 	}
 	return out;
 }
+
+export function buildEdgePath(a: NodePosition, b: NodePosition): string {
+	return segmentD(a, b);
+}
+
+export function positionsToMap(positions: NodePosition[]): Record<string, NodePosition> {
+	const out: Record<string, NodePosition> = {};
+	for (const p of positions) out[p.id] = p;
+	return out;
+}

@@ -24,11 +24,18 @@ export interface PlcNode {
 	required?: boolean;
 }
 
+export interface Dependency {
+	from: string;
+	to: string;
+	type: 'hard' | 'soft' | 'parallel';
+}
+
 export interface Journey {
 	id: string;
 	name: string;
 	cat: string;
 	steps: string[];
+	dependencies?: Dependency[];
 }
 
 export interface JourneyData {

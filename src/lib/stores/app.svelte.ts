@@ -22,6 +22,7 @@ let _active = $state<string | null>(null);
 let _viewMode = $state<'standard' | 'dependency'>('standard');
 let _depMode = $state<'ambient' | 'realistic'>('ambient');
 let _selectedNode = $state<string | null>(null);
+let _legendOpen = $state(false);
 
 // Filters
 let _filterJurisdictions = $state<string[]>([]);
@@ -48,6 +49,8 @@ export const app = {
 	set depMode(v) { _depMode = v; },
 	get selectedNode() { return _selectedNode; },
 	set selectedNode(v) { _selectedNode = v; },
+	get legendOpen() { return _legendOpen; },
+	set legendOpen(v) { _legendOpen = v; },
 
 	get filterJurisdictions() { return _filterJurisdictions; },
 	set filterJurisdictions(v) { _filterJurisdictions = v; },

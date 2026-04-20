@@ -6,6 +6,8 @@
 		measureNodePositions,
 		buildSvgPath,
 		buildSegmentPaths,
+		buildEdgePath,
+		positionsToMap,
 		type NodePosition
 	} from '$lib/utils/pathCalc';
 	import {
@@ -19,13 +21,15 @@
 		prefersReducedMotion,
 		type RealisticStatus
 	} from '$lib/utils/timeline';
-	import type { PlcNode } from '$lib/types';
+	import { topoSort, buildAdjacency, isEntryPoint } from '$lib/utils/topoSort';
+	import type { PlcNode, Dependency } from '$lib/types';
 
 	gsap.registerPlugin(MotionPathPlugin);
 
 	let {
 		containerEl,
 		steps,
+		dependencies,
 		nodeMap,
 		mode = 'ambient',
 		restartKey = 0,
@@ -33,36 +37,84 @@
 	}: {
 		containerEl: HTMLDivElement;
 		steps: string[];
+		dependencies?: Dependency[];
 		nodeMap: Record<string, PlcNode>;
 		mode?: 'ambient' | 'realistic';
 		restartKey?: number;
 		onStatus?: (s: RealisticStatus) => void;
 	} = $props();
 
+	interface EdgeGeom {
+		key: string;
+		from: string;
+		to: string;
+		type: 'hard' | 'soft' | 'parallel';
+		d: string;
+		length: number;
+	}
+
 	let svgEl: SVGSVGElement | undefined = $state();
 	let dotEl: SVGCircleElement | undefined = $state();
-	let pathEl: SVGPathElement | undefined = $state();
-	const segmentEls: (SVGPathElement | undefined)[] = $state([]);
 
-	let pathD = $state('');
-	let segmentDs = $state<string[]>([]);
+	let orderedSteps = $state<string[]>([]);
 	let positions = $state<NodePosition[]>([]);
+	let posMap = $state<Record<string, NodePosition>>({});
+	let edges = $state<EdgeGeom[]>([]);
+	let segmentDs = $state<string[]>([]); // dot-hop paths between consecutive ordered nodes
+	let entryIds = $state<string[]>([]);
+	let fallbackPathD = $state('');
 	let svgW = $state(0);
 	let svgH = $state(0);
 
+	const edgePathEls: (SVGPathElement | undefined)[] = $state([]);
+	const segmentEls: (SVGPathElement | undefined)[] = $state([]);
+
 	const RIPPLE_POOL_SIZE = 4;
-	const rippleEls: (SVGCircleElement | undefined)[] = $state(Array(RIPPLE_POOL_SIZE).fill(undefined));
+	const rippleEls: (SVGCircleElement | undefined)[] = $state(
+		Array(RIPPLE_POOL_SIZE).fill(undefined)
+	);
 	let rippleIdx = 0;
 
 	let timeline: gsap.core.Timeline | null = null;
 	let resizeObs: ResizeObserver | null = null;
 	let activeNodeId: string | null = null;
 
+	const hasDeps = $derived((dependencies?.length ?? 0) > 0);
+
 	function recalculate() {
 		if (!containerEl) return;
-		positions = measureNodePositions(containerEl, steps, nodeMap);
-		pathD = buildSvgPath(positions);
+		orderedSteps = topoSort(steps, dependencies);
+		positions = measureNodePositions(containerEl, orderedSteps, nodeMap);
+		posMap = positionsToMap(positions);
+
+		// Build edges from dependency data (only between nodes we have positions for).
+		const eg: EdgeGeom[] = [];
+		if (dependencies) {
+			for (const e of dependencies) {
+				const a = posMap[e.from];
+				const b = posMap[e.to];
+				if (!a || !b) continue;
+				const d = buildEdgePath(a, b);
+				eg.push({
+					key: `${e.from}->${e.to}`,
+					from: e.from,
+					to: e.to,
+					type: e.type,
+					d,
+					length: 0
+				});
+			}
+		}
+		edges = eg;
+
+		// Segments between consecutive ordered nodes (for dot travel).
 		segmentDs = buildSegmentPaths(positions);
+
+		// Entry-point nodes: no incoming hard/soft edge.
+		entryIds = orderedSteps.filter((id) => isEntryPoint(id, dependencies));
+
+		fallbackPathD = hasDeps ? '' : buildSvgPath(positions);
+
 		svgW = containerEl.scrollWidth;
 		svgH = containerEl.scrollHeight;
 	}
@@ -102,26 +154,58 @@
 		});
 	}
 
-	function snapDotToFirstNode() {
-		const firstSeg = segmentEls[0];
-		if (!firstSeg || !dotEl) return;
-		gsap.set(dotEl, {
-			motionPath: {
-				path: firstSeg,
-				align: firstSeg,
-				alignOrigin: [0.5, 0.5],
-				start: 0,
-				end: 0
-			}
+	function resetEdgeVisibility() {
+		if (!hasDeps) return;
+		edges.forEach((_, i) => {
+			const el = edgePathEls[i];
+			if (!el) return;
+			const len = el.getTotalLength?.() ?? 0;
+			edges[i].length = len;
+			el.style.strokeDasharray = `${len} ${len}`;
+			el.style.strokeDashoffset = `${len}`;
+			el.style.opacity = '0';
+		});
+	}
+
+	function drawInEdge(i: number, duration: number) {
+		const el = edgePathEls[i];
+		if (!el) return;
+		const len = edges[i].length || el.getTotalLength?.() || 0;
+		gsap.set(el, { opacity: strokeOpacityFor(edges[i].type) });
+		gsap.to(el, {
+			strokeDashoffset: 0,
+			duration,
+			ease: 'power1.out',
+			overwrite: 'auto'
+		});
+	}
+
+	function strokeOpacityFor(type: EdgeGeom['type']): number {
+		if (type === 'hard') return 1;
+		if (type === 'soft') return 0.6;
+		return 0.5;
+	}
+
+	function showAllEdgesStatic() {
+		if (!hasDeps) return;
+		edges.forEach((e, i) => {
+			const el = edgePathEls[i];
+			if (!el) return;
+			el.style.strokeDasharray = '';
+			el.style.strokeDashoffset = '';
+			el.style.opacity = String(strokeOpacityFor(e.type));
 		});
 	}
 
 	function startAnimation() {
 		killAnimation();
-		if (!pathD || !dotEl || !pathEl || positions.length < 2) return;
+		if (!dotEl || positions.length < 2) {
+			if (hasDeps) showAllEdgesStatic();
+			return;
+		}
 		if (prefersReducedMotion()) {
+			showAllEdgesStatic();
 			if (mode === 'realistic') {
-				// Emit a finished status so HUD shows the total day count.
 				const totalDays = positions.reduce((acc, p) => acc + (p.weeks ?? 1) * 7, 0);
 				onStatus?.({
 					day: totalDays,
@@ -135,11 +219,19 @@
 			return;
 		}
 
+		resetEdgeVisibility();
+
 		if (mode === 'realistic') {
 			buildRealisticTimeline();
 		} else {
 			buildAmbientTimeline();
 		}
+	}
+
+	function edgesIntoIndices(toId: string): number[] {
+		const out: number[] = [];
+		for (let i = 0; i < edges.length; i++) if (edges[i].to === toId) out.push(i);
+		return out;
 	}
 
 	function buildAmbientTimeline() {
@@ -155,7 +247,13 @@
 		const target = Math.min(LOOP_MAX_S, Math.max(LOOP_MIN_S, rawTotal));
 		const scale = rawTotal > 0 ? target / rawTotal : 1;
 
-		timeline = gsap.timeline({ repeat: -1, repeatDelay: 0.5 });
+		timeline = gsap.timeline({
+			repeat: -1,
+			repeatDelay: 0.5,
+			onRepeat: () => {
+				if (hasDeps) resetEdgeVisibility();
+			}
+		});
 
 		const firstSeg = segmentEls[0];
 		timeline.set(dotEl, { attr: { opacity: 0 } });
@@ -181,6 +279,11 @@
 			timeline.call(() => {
 				setGlow(p.id);
 				fireRipple(p);
+				if (hasDeps) {
+					for (const idx of edgesIntoIndices(p.id)) {
+						drawInEdge(idx, Math.min(1.2, Math.max(0.25, dwellSec * 0.6)));
+					}
+				}
 			});
 
 			const pulseDur = Math.min(dwellSec, 0.35);
@@ -225,12 +328,10 @@
 		timeline.to(dotEl, { attr: { opacity: 0 }, duration: 0.3 });
 	}
 
-	// Realistic mode: 1 year = 1 minute, plays once, emits a status object for HUD.
 	function buildRealisticTimeline() {
 		if (!dotEl) return;
 		const n = positions.length;
 
-		// Precompute per-node days and cumulative day at arrival.
 		const nodeDays = positions.map((p) => Math.max(1, (p.weeks ?? 1) * 7));
 		const cumDays: number[] = [];
 		let running = 0;
@@ -240,9 +341,7 @@
 		}
 		const totalDays = running;
 
-		// Plain proxy object driven by GSAP for the day counter.
 		const dayProxy = { day: 0 };
-
 		const emit = (partial: Partial<RealisticStatus>) => {
 			onStatus?.({
 				day: dayProxy.day,
@@ -282,11 +381,15 @@
 			const startDay = cumDays[i];
 			const totalWeeks = days / 7;
 
-			// Arrival: glow, ripple, emit initial node status.
 			timeline.call(() => {
 				setGlow(p.id);
 				fireRipple(p);
 				dayProxy.day = startDay;
+				if (hasDeps) {
+					for (const idx of edgesIntoIndices(p.id)) {
+						drawInEdge(idx, Math.min(2, dwellSec * 0.5));
+					}
+				}
 				emit({
 					day: startDay,
 					nodeId: p.id,
@@ -296,21 +399,14 @@
 				});
 			});
 
-			// Arrival pulse.
 			const pulseDur = Math.min(dwellSec, 0.35);
 			timeline.to(dotEl, {
 				attr: { r: 5 + w * 4 },
 				duration: pulseDur / 2,
 				ease: 'power2.out'
 			});
-			timeline.to(
-				dotEl,
-				{ attr: { r: 5 }, duration: pulseDur / 2, ease: 'power2.in' },
-				'<'
-			);
+			timeline.to(dotEl, { attr: { r: 5 }, duration: pulseDur / 2, ease: 'power2.in' }, '<');
 
-			// Day-counter tween driving the HUD. Animates dayProxy.day from
-			// startDay → startDay+days over dwellSec, linearly.
 			timeline.to(
 				dayProxy,
 				{
@@ -330,7 +426,6 @@
 				'<'
 			);
 
-			// Travel to next node: fixed short transition, counter frozen.
 			if (i < n - 1) {
 				const segEl = segmentEls[i];
 				timeline.call(() => setGlow(null));
@@ -374,9 +469,9 @@
 		activeNodeId = null;
 	}
 
-	// Recalculate when steps or container change
 	$effect(() => {
 		void steps;
+		void dependencies;
 		void containerEl;
 		void nodeMap;
 		queueMicrotask(() => {
@@ -384,11 +479,11 @@
 		});
 	});
 
-	// Start animation when path is ready. Also re-runs when mode or restartKey change.
 	$effect(() => {
 		void mode;
 		void restartKey;
-		if (pathD && dotEl && pathEl) {
+		void edges;
+		if ((hasDeps || fallbackPathD) && dotEl) {
 			startAnimation();
 		}
 	});
@@ -412,7 +507,7 @@
 	});
 </script>
 
-{#if pathD && positions.length >= 2}
+{#if positions.length >= 2}
 	<svg
 		bind:this={svgEl}
 		class="absolute inset-0 pointer-events-none"
@@ -428,24 +523,87 @@
 					<feMergeNode in="SourceGraphic" />
 				</feMerge>
 			</filter>
+			<marker
+				id="arrow-hard"
+				viewBox="0 0 10 10"
+				refX="9"
+				refY="5"
+				markerWidth="6"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink)" />
+			</marker>
+			<marker
+				id="arrow-soft"
+				viewBox="0 0 10 10"
+				refX="9"
+				refY="5"
+				markerWidth="5"
+				markerHeight="5"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text)" opacity="0.7" />
+			</marker>
+			<marker
+				id="arrow-parallel"
+				viewBox="0 0 10 10"
+				refX="9"
+				refY="5"
+				markerWidth="4"
+				markerHeight="4"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--muted)" opacity="0.6" />
+			</marker>
 		</defs>
 
-		<!-- Static dashed path showing the full route -->
-		<path
-			d={pathD}
-			fill="none"
-			stroke="var(--accent)"
-			stroke-width="1.5"
-			stroke-dasharray="6 4"
-			opacity="0.25"
-		/>
+		{#if hasDeps}
+			<!-- Per-edge dependency paths -->
+			{#each edges as edge, i (edge.key)}
+				<path
+					bind:this={edgePathEls[i]}
+					d={edge.d}
+					fill="none"
+					stroke={edge.type === 'hard'
+						? 'var(--ink)'
+						: edge.type === 'soft'
+							? 'var(--text)'
+							: 'var(--muted)'}
+					stroke-width={edge.type === 'hard' ? 1.5 : 1}
+					stroke-dasharray={edge.type === 'soft' ? '4 3' : edge.type === 'parallel' ? '1 3' : ''}
+					opacity={strokeOpacityFor(edge.type)}
+					marker-end="url(#arrow-{edge.type})"
+				/>
+			{/each}
+		{:else if fallbackPathD}
+			<path
+				d={fallbackPathD}
+				fill="none"
+				stroke="var(--accent)"
+				stroke-width="1.5"
+				stroke-dasharray="6 4"
+				opacity="0.25"
+			/>
+		{/if}
 
-		<!-- Hidden reference path for GSAP MotionPathPlugin (full concatenated) -->
-		<path bind:this={pathEl} d={pathD} fill="none" stroke="none" />
+		<!-- Entry-point rings -->
+		{#each entryIds as id}
+			{@const p = posMap[id]}
+			{#if p}
+				<circle
+					cx={p.cx}
+					cy={p.cy}
+					r="18"
+					fill="none"
+					stroke="var(--accent)"
+					stroke-width="1"
+					opacity="0.35"
+				/>
+			{/if}
+		{/each}
 
-		<!-- Hidden per-segment paths — one per node-to-node hop, driven
-		     individually so motion is constant-speed and lands exactly on
-		     each node regardless of bezier arc-length variation. -->
+		<!-- Hidden per-segment dot-hop paths -->
 		{#each segmentDs as segD, i}
 			<path bind:this={segmentEls[i]} d={segD} fill="none" stroke="none" />
 		{/each}
@@ -455,9 +613,18 @@
 			<circle cx={pos.cx} cy={pos.cy} r="3" fill="var(--accent)" opacity="0.35" />
 		{/each}
 
-		<!-- Ripple pool for arrival pulses -->
+		<!-- Ripple pool -->
 		{#each rippleEls as _, i}
-			<circle bind:this={rippleEls[i]} cx="0" cy="0" r="0" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity="0" />
+			<circle
+				bind:this={rippleEls[i]}
+				cx="0"
+				cy="0"
+				r="0"
+				fill="none"
+				stroke="var(--accent)"
+				stroke-width="1.5"
+				opacity="0"
+			/>
 		{/each}
 
 		<!-- Animated dot -->

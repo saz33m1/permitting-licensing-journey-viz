@@ -111,3 +111,33 @@ export function prefersReducedMotion(): boolean {
 	if (typeof window === 'undefined') return false;
 	return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 }
+
+export interface LevelSchedule {
+	levelDays: number[]; // max days per level
+	cumDays: number[]; // cumulative start-of-level
+	totalDays: number;
+}
+
+export function buildLevelScheduleFromTimings(
+	levels: Array<{ stepIds: string[] }>,
+	timings: StepTiming[]
+): LevelSchedule {
+	const byId: Record<string, StepTiming> = {};
+	for (const t of timings) byId[t.id] = t;
+	const levelDays = levels.map((lvl) => {
+		let max = 1;
+		for (const id of lvl.stepIds) {
+			const t = byId[id];
+			const d = Math.max(1, ((t?.weeks ?? 1) * 7));
+			if (d > max) max = d;
+		}
+		return max;
+	});
+	const cumDays: number[] = [];
+	let running = 0;
+	for (const d of levelDays) {
+		cumDays.push(running);
+		running += d;
+	}
+	return { levelDays, cumDays, totalDays: running };
+}

@@ -11,10 +11,12 @@
 	let {
 		status,
 		onReplay,
+		minWeeks = 0,
 		mobile = false
 	}: {
 		status: RealisticStatus;
 		onReplay: () => void;
+		minWeeks?: number;
 		mobile?: boolean;
 	} = $props();
 
@@ -28,6 +30,7 @@
 			: 0
 	);
 	const weekTotal = $derived(Math.max(0, Math.ceil(status.totalWeeksInStep)));
+	const minWeeksDisplay = $derived(Math.max(0, Math.ceil(minWeeks)));
 </script>
 
 <div
@@ -70,5 +73,14 @@
 				</span>
 			{/if}
 		{/if}
+	{/if}
+
+	{#if minWeeksDisplay > 0}
+		<div class="mt-2 pt-2" style="border-top: 1px solid var(--muted);">
+			<span class="font-mono text-[9px] tracking-[1.5px] uppercase" style="color: var(--text);">Min. with parallelism</span>
+			<div class="font-mono text-xs mt-0.5" style="color: var(--ink);">
+				<span class="font-bold">{minWeeksDisplay}</span> weeks
+			</div>
+		</div>
 	{/if}
 </div>
