@@ -1,0 +1,85 @@
+{
+  "naicsCodes": "541310, 925120",
+  "defaultSectorId": "construction",
+  "canHavePermanentLocation": true,
+  "roadmapSteps": [
+    {
+      "step": 1,
+      "weight": 1,
+      "task": "business-plan"
+    },
+    {
+      "step": 1,
+      "weight": 50,
+      "task": "determine-naics-code",
+      "required": true
+    },
+    {
+      "step": 1,
+      "weight": 100,
+      "task": "business-structure",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 20,
+      "task": "register-for-ein",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 25,
+      "task": "register-for-taxes",
+      "required": true
+    },
+    {
+      "step": 3,
+      "weight": 10,
+      "task": "bank-account"
+    },
+    {
+      "step": 3,
+      "weight": 15,
+      "task": "get-insurance"
+    },
+    {
+      "step": 4,
+      "weight": 20,
+      "licenseTask": "architect-license",
+      "required": true
+    },
+    {
+      "step": 4,
+      "weight": 25,
+      "task": "architect-are-exam",
+      "required": true
+    },
+    {
+      "step": 4,
+      "weight": 30,
+      "licenseTask": "authorization-architect-firm",
+      "required": true
+    },
+    {
+      "step": 4,
+      "weight": 1,
+      "licenseTask": "professional-planner-license"
+    },
+    {
+      "step": 4,
+      "weight": 99,
+      "task": "manage-business-vehicles"
+    }
+  ],
+  "name": "Architecture and Urban Planning ",
+  "nonEssentialQuestionsIds": [],
+  "displayname": "architecture",
+  "industryOnboardingQuestions": {
+    "canBeHomeBased": true
+  },
+  "isEnabled": true,
+  "additionalSearchTerms": "architect, engineer, consulting, architectural services, planning, firm, professional services, urban planning, land use, landscape architect, regional planning",
+  "id": "architecture",
+  "description": "Plans, designs, and manages the development of buildings, cities, and regions",
+  "webflowId": "656a13629e1c371e9fc59cbd"
+}

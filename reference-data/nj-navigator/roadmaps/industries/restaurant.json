@@ -1,0 +1,90 @@
+{
+  "naicsCodes": "722511, 722310, 722320, 722410, 722513, 722514, 722515",
+  "defaultSectorId": "accommodation-and-food-services",
+  "canHavePermanentLocation": true,
+  "roadmapSteps": [
+    {
+      "step": 1,
+      "weight": 1,
+      "task": "business-plan"
+    },
+    {
+      "step": 1,
+      "weight": 50,
+      "task": "determine-naics-code",
+      "required": true
+    },
+    {
+      "step": 1,
+      "weight": 100,
+      "task": "business-structure",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 20,
+      "task": "register-for-ein",
+      "required": true
+    },
+    {
+      "step": 2,
+      "weight": 25,
+      "task": "register-for-taxes",
+      "required": true
+    },
+    {
+      "step": 3,
+      "weight": 10,
+      "task": "bank-account"
+    },
+    {
+      "step": 3,
+      "weight": 15,
+      "task": "get-insurance"
+    },
+    {
+      "step": 4,
+      "weight": 15,
+      "task": "floor-plan-approval-doh",
+      "required": true
+    },
+    {
+      "step": 4,
+      "weight": 100,
+      "licenseTask": "food-safety-course"
+    },
+    {
+      "step": 4,
+      "weight": 16,
+      "task": "env-requirements",
+      "required": false
+    },
+    {
+      "step": 4,
+      "weight": 90,
+      "task": "resale-tax-certificate-operating"
+    },
+    {
+      "step": 4,
+      "weight": 99,
+      "task": "manage-business-vehicles"
+    }
+  ],
+  "name": "Restaurant",
+  "nonEssentialQuestionsIds": [
+    "weights-measures",
+    "inspect-boiler",
+    "inspect-pv",
+    "inspect-fridge",
+    "sell-milk-question"
+  ],
+  "displayname": "restaurant",
+  "industryOnboardingQuestions": {
+    "isLiquorLicenseApplicable": true
+  },
+  "isEnabled": true,
+  "additionalSearchTerms": "cafe, grill",
+  "id": "restaurant",
+  "description": "Provides food to patrons",
+  "webflowId": "656a1362e1f1359c3c90e9eb"
+}
