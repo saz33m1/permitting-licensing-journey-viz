@@ -83,7 +83,7 @@
 
 	function recalculate() {
 		if (!containerEl) return;
-		orderedSteps = topoSort(steps, dependencies);
+		orderedSteps = topoSort(steps, dependencies, nodeMap);
 		positions = measureNodePositions(containerEl, orderedSteps, nodeMap);
 		posMap = positionsToMap(positions);
 

@@ -59,14 +59,14 @@ export function computeTopologicalLevels(
 		byLevel.get(lvl)!.push(id);
 	}
 
+	const weeksFor = (id: string) =>
+		parseEstTimeWeeks(nodeMap[id]?.estTime ?? null) ?? 0;
+
 	const levels: TopoLevel[] = [];
 	for (const [lvl, ids] of [...byLevel.entries()].sort((a, b) => a[0] - b[0])) {
-		ids.sort((a, b) => inputIndex[a] - inputIndex[b]);
+		ids.sort((a, b) => weeksFor(a) - weeksFor(b) || inputIndex[a] - inputIndex[b]);
 		const nodes = ids.map((id) => nodeMap[id]).filter(Boolean);
-		const maxWeeks = Math.max(
-			0,
-			...nodes.map((n) => parseEstTimeWeeks(n.estTime ?? null) ?? 0)
-		);
+		const maxWeeks = Math.max(0, ...nodes.map((n) => weeksFor(n.id)));
 		levels.push({ level: lvl, stepIds: ids, nodes, maxWeeks });
 	}
 	return levels;
