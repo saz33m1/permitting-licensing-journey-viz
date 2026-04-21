@@ -1,5 +1,24 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	// Vite's default JSON plugin doesn't pre-transform files outside src/, so
+	// import as raw text and parse. Keeps reference-data/MANIFEST.json as the
+	// canonical source of truth without duplicating it into the app.
+	import manifestRaw from '../../../reference-data/MANIFEST.json?raw';
+
+	const manifest = JSON.parse(manifestRaw) as {
+		datasets: Array<{ name: string; description: string; url: string }>;
+	};
+
+	type SourceCard = { name: string; desc: string; url: string | null };
+
+	const sourceCards: SourceCard[] = [
+		...manifest.datasets.map((d) => ({ name: d.name, desc: d.description, url: d.url })),
+		{
+			name: 'Municipal Codes',
+			desc: 'Common local permitting patterns for construction, land use, events',
+			url: null
+		}
+	];
 </script>
 
 <svelte:head>
@@ -148,14 +167,7 @@
 			Sources
 		</h2>
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-			{#each [
-				{ name: 'SBA.gov', desc: 'Federal business formation guide and 10-step startup sequence', url: 'https://www.sba.gov/business-guide/10-steps-start-your-business' },
-				{ name: 'New Jersey Business Navigator', desc: 'Open-source NAICS-based business formation framework', url: 'https://navigator.business.nj.gov' },
-				{ name: 'Maryland PLC Data Catalog', desc: '1,100+ permit, license, and compliance types with operational metadata', url: 'https://opendata.maryland.gov/d/gdzy-2fen' },
-				{ name: 'DOL License Finder', desc: 'Federal database of licensing requirements across all states', url: 'https://www.careeronestop.org/toolkit/training/find-licenses.aspx' },
-				{ name: 'NCSL Database', desc: '48 occupations across all states for occupational licensing', url: 'https://knee.wvu.edu/data' },
-				{ name: 'Municipal Codes', desc: 'Common local permitting patterns for construction, land use, events', url: null as string | null }
-			] as source}
+			{#each sourceCards as source (source.name)}
 				<div class="p-4" style="border: 1px solid var(--muted);">
 					{#if source.url}
 						<a
