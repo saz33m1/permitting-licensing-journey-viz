@@ -1,0 +1,57 @@
+{
+  "description": "Machine-readable index of third-party reference datasets used to cross-validate the 114 journey archetypes.",
+  "datasets": [
+    {
+      "id": "maryland-plc",
+      "name": "Maryland PLC Data Catalog",
+      "publisher": "Maryland Open Data Portal",
+      "url": "https://opendata.maryland.gov/d/gdzy-2fen",
+      "localPath": "reference-data/maryland-plc/plc-data-catalog.csv",
+      "legalBasis": "Maryland Transparent Government Act of 2024",
+      "datePublished": "2026-01-15",
+      "recordCount": 1058,
+      "description": "1,058 PLC types with operational metadata.",
+      "appliesTo": { "scope": "all", "note": "Broad PLC type taxonomy applicable across all 15 categories." }
+    },
+    {
+      "id": "dol-careeronestop",
+      "name": "DOL CareerOneStop Occupational License Finder",
+      "publisher": "U.S. Department of Labor / Analyst Resource Center",
+      "url": "https://www.careeronestop.org/toolkit/training/find-licenses.aspx",
+      "localPath": "reference-data/dol-careeronestop/",
+      "dateUpdated": "2024-10",
+      "description": "Full flat-export of all occupational license records across US states.",
+      "appliesTo": { "scope": "categories", "categories": ["proflic", "health", "trades", "profsvc"] }
+    },
+    {
+      "id": "knee-center",
+      "name": "WVU Knee Regulatory Research Center Licensing Database",
+      "publisher": "Knee Regulatory Research Center, West Virginia University",
+      "url": "https://knee.wvu.edu/data",
+      "localPath": "reference-data/knee-center/",
+      "datePublished": "2025-12",
+      "recordCount": "96 professions x 51 jurisdictions",
+      "description": "Annual snapshot of occupational licensing requirements across all 50 states + DC.",
+      "appliesTo": { "scope": "categories", "categories": ["proflic", "health", "trades"] }
+    },
+    {
+      "id": "sba-10-steps",
+      "name": "SBA 10-Step Business Startup Guide",
+      "publisher": "U.S. Small Business Administration",
+      "url": "https://www.sba.gov/business-guide/10-steps-start-your-business",
+      "localPath": "reference-data/sba/",
+      "description": "Canonical federal guidance for business formation sequence.",
+      "appliesTo": { "scope": "journeys", "journeyIds": null, "note": "Applies to all 80 journeys with ein or biz_reg steps." }
+    },
+    {
+      "id": "nj-navigator",
+      "name": "NJ Business Navigator Roadmaps",
+      "publisher": "State of New Jersey / Office of Innovation",
+      "url": "https://navigator.business.nj.gov",
+      "sourceRepo": "https://github.com/newjersey/navigator.business.nj.gov",
+      "localPath": "reference-data/nj-navigator/",
+      "description": "Industry-specific licensing roadmaps from NJ's open-source business portal.",
+      "appliesTo": { "scope": "journeys", "journeyIds": ["restaurant", "food_truck", "retail", "cannabis_d", "salon", "architect"] }
+    }
+  ]
+}
