@@ -46,13 +46,17 @@ There is no test runner and no linter configured. `npm run check` is the closest
 Journey data lives in `static/data/journeys.json` — a single file with four arrays:
 
 ```
-jurisdictions  — federal, state, local   (3)
-categories     — journey groupings       (15)
-plcNodes       — permit/license/compliance node types (58)
-journeys       — 114 journeys; each has steps: string[] of PLC node IDs
+jurisdictions  — federal, state, local          (3)
+categories     — journey groupings              (15)
+plcNodes       — permit/license/compliance node types (57)
+journeys       — 114 journeys; each carries:
+                 steps: string[]           PLC node ids
+                 dependencies: Dependency[] {from, to, type: 'hard'|'soft'|'parallel'}
 ```
 
-Types are declared in `src/lib/types.ts`. Note `PlcNode` carries extended metadata beyond the id/name/jurisdiction basics — `phase` (one of `preparation`/`application`/`inspection`/`active`), `agency`, `description`, `fee`, `estTime`, `renewalTerm`, `required`, `blocking`. The `phase` field is what powers the 2D matrix layout.
+Types are declared in `src/lib/types.ts`. `PlcNode` carries extended metadata beyond id/name/jurisdiction — `phase` (one of `preparation`/`application`/`inspection`/`active`), `agency`, `description`, `fee`, `estTime`, `renewalTerm`, `required`, `blocking`. The `phase` field powers the 2D matrix layout; `estTime` and `dependencies` together drive the topological ordering and the parallel-aware timeline.
+
+`dependency-rules.json` at the repo root encodes universal + per-category dependency patterns used for authoring validation (not consumed at runtime). `reference-data/` holds third-party datasets (NJ Business Navigator, Maryland PLC catalog, SBA, etc.) used to cross-validate the 114 journeys — also not shipped to the client.
 
 `src/routes/+layout.svelte` fetches `/data/journeys.json` on mount and hands the result to `app.loadData(data)`.
 
@@ -62,6 +66,7 @@ Types are declared in `src/lib/types.ts`. Note `PlcNode` carries extended metada
 
 - Selection: `active` (journey id), `selectedNode` (node id), `viewMode` (`'standard'` | `'dependency'`), `depMode` (`'ambient'` | `'realistic'`, only meaningful when `viewMode === 'dependency'`; the `viewMode` setter resets `depMode` to `'ambient'` when leaving dependency view)
 - Filters: `filterJurisdictions`, `filterCategories`, `filterSearch`
+- UI: `legendOpen` (persists the dependency-view legend card's open/collapsed state for the session)
 - Loaded data + indexed lookups: `journeys`, `plcNodes`, `categories`, `jurisdictions`, `nodeMap`, `catName`
 - Derived: `activeJourney`, `filteredJourneys`
 
@@ -80,14 +85,25 @@ Also exports `JC` (jurisdiction color hex map), `PHASE_LABELS`, `PHASES`, `JURIS
 
 ### Journey view (the matrix)
 
-`MatrixGrid` renders a 4 × 3 grid (phases × jurisdictions). `lib/utils/matrix.ts` (`computeMatrix`) bins a journey's steps into the 12 cells keyed `"${jurisdiction}-${phase}"`. Each cell contains `NodeCard`s; selecting one opens `NodeDetailPanel` (agency, fee, renewal, description, etc.).
+`MatrixGrid` renders a 4 × 3 grid (phases × jurisdictions). `lib/utils/matrix.ts` (`computeMatrix`) bins a journey's steps into the 12 cells keyed `"${jurisdiction}-${phase}"`. Each cell contains `NodeCard`s; selecting one opens `NodeDetailPanel` (agency, fee, renewal, description, plus Requires/Unblocks derived from `journey.dependencies`).
 
-`FlowPathOverlay` draws an animated dependency path **over** the grid: `lib/utils/pathCalc.ts` measures DOM positions via `[data-node-id]` query, builds a cubic-bezier SVG with horizontal-biased S-curves for cross-column links and offset curves for same-column links (to avoid overlaps), and GSAP animates it.
+**Step ordering is derived from the DAG, not `journey.steps` authoring order.** `lib/utils/topoSort.ts` runs Kahn's algorithm over the dependencies, with two tiebreak rules inside each topological level:
+
+1. Ascending `parseEstTimeWeeks(estTime)` — shorter steps first, longest step at each level last.
+2. Authoring order — stable fallback when weeks tie.
+
+A post-pass then checks the overall longest step: if it's a **leaf** (no non-`parallel` outgoing edge), it's moved to the very end of the sequence so the headline duration lands as the journey's final step. `lib/utils/topoLevels.ts` (`computeTopologicalLevels`) applies the same intra-level sort and exposes `maxWeeks` per level; `minWeeksParallel(levels)` sums those maxes to produce the critical-path minimum used by the HUD.
+
+`MatrixGrid` also tracks predecessor/successor sets via `buildAdjacency` and dims unconnected `NodeCard`s on selection. Entry-point nodes (no non-`parallel` incoming edge) render a brick-red `Start` badge; `MobileTimeline`'s phase accordion additionally renders a "Requires" chip under each step listing its hard prerequisites.
+
+`FlowPathOverlay` draws one SVG `<path>` **per dependency edge** on top of the grid. Strokes are type-specific (`hard` solid ink, `soft` dashed `var(--text)`, `parallel` dotted `var(--muted)`), each path gets a `marker-end` arrow, and entry-point nodes are highlighted with an outer ring. `lib/utils/pathCalc.ts` (`buildEdgePath`) produces the cubic-bezier `d` string — horizontal-biased S-curves for cross-column links, offset curves for same-column links.
 
 The dependency view has two sub-modes, controlled by `depMode`:
 
-- **Ambient** — looped tour with per-journey tempo. Travel is constant-speed via per-segment `motionPath`; dwells are log-scaled off node `estTime`/`fee`/`blocking`/`required`, and the full loop is normalized to 10–40s so every journey stays watchable.
-- **Realistic** — plays once at `1 day = 0.1s`, surfacing the literal bureaucratic duration. `RealisticHUD.svelte` renders a Day/Week counter and a Replay button.
+- **Ambient** — looped tour. The GSAP dot walks nodes in topological order; as it arrives at each node, its incoming dependency edges stroke-in via `stroke-dashoffset` animation so the graph builds up visually. Dwells are log-scaled off `estTime`/`fee`/`blocking`/`required` via `computeDwell` in `lib/utils/timeline.ts`; the full loop is normalized to 10–40 s.
+- **Realistic** — plays once at `1 day = 0.1 s`, surfacing the literal bureaucratic duration. `RealisticHUD.svelte` renders a live Day/Week counter, a Replay button, and a static "Min. with parallelism" readout fed by `minWeeksParallel` — usually materially shorter than the sequential sum because same-level steps collapse to their max.
+
+`DependencyLegend.svelte` floats over the grid's empty top-left corner as a small `Legend` pill that expands into a card explaining Hard / Soft / Parallel / Start / (in realistic) Min. parallel. Its open state is session-scoped via `app.legendOpen`.
 
 ### Design tokens
 
@@ -130,17 +146,27 @@ Deploy flow: `.github/workflows/deploy.yml` runs on push to `master`, builds wit
 ├── src/
 │   ├── routes/                  ← /, /journey/[id], /methodology, /contact
 │   ├── lib/
-│   │   ├── components/          ← HomeScreen, JourneyScreen, MatrixGrid, NodeCard, NodeDetailPanel, FlowPathOverlay, RealisticHUD, TopNavbar, JourneyRow
+│   │   ├── components/          ← HomeScreen, JourneyScreen, MatrixGrid, NodeCard, NodeDetailPanel,
+│   │   │                           FlowPathOverlay, DependencyLegend, RealisticHUD, MobileTimeline,
+│   │   │                           TopNavbar, JourneyRow, ScreenSizeNotice
 │   │   ├── components/ui/       ← shadcn-svelte primitives (generated)
 │   │   ├── stores/app.svelte.ts ← singleton rune store
-│   │   ├── utils/{matrix,pathCalc}.ts
+│   │   ├── utils/
+│   │   │   ├── matrix.ts          ← bin steps into 4×3 phase × jurisdiction cells
+│   │   │   ├── pathCalc.ts        ← DOM position measurement + per-edge bezier
+│   │   │   ├── topoSort.ts        ← Kahn's + duration tiebreak + longest-leaf-last
+│   │   │   ├── topoLevels.ts      ← level grouping + parallel-aware min
+│   │   │   └── timeline.ts        ← dwell/schedule math for ambient + realistic
 │   │   ├── hooks/is-mobile.svelte.ts
 │   │   ├── types.ts
 │   │   └── utils.ts             ← shadcn `cn` helper
 │   ├── app.css                  ← Tailwind v4 + design tokens
 │   └── app.html
 ├── static/data/journeys.json    ← canonical data
+├── dependency-rules.json        ← authoring-time dependency patterns
+├── reference-data/              ← third-party datasets for cross-validation
 ├── docs/prd.html                ← product spec
+├── docs/DEPENDENCY_PRD.md       ← dependency-aware UI spec
 ├── DATA_COLLECTION.md           ← data research methodology
 └── {package,svelte.config,vite.config,tsconfig,components}.{json,js,ts}
 ```
