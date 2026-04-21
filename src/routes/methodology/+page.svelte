@@ -149,16 +149,31 @@
 		</h2>
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 			{#each [
-				{ name: 'SBA.gov', desc: 'Federal business formation guide and 10-step startup sequence' },
-				{ name: 'New Jersey Business Navigator', desc: 'Open-source NAICS-based business formation framework' },
-				{ name: 'Maryland PLC Data Catalog', desc: '1,100+ permit, license, and compliance types with operational metadata' },
-				{ name: 'DOL License Finder', desc: 'Federal database of licensing requirements across all states' },
-				{ name: 'NCSL Database', desc: '48 occupations across all states for occupational licensing' },
-				{ name: 'Municipal Codes', desc: 'Common local permitting patterns for construction, land use, events' }
+				{ name: 'SBA.gov', desc: 'Federal business formation guide and 10-step startup sequence', url: 'https://www.sba.gov/business-guide/10-steps-start-your-business' },
+				{ name: 'New Jersey Business Navigator', desc: 'Open-source NAICS-based business formation framework', url: 'https://navigator.business.nj.gov' },
+				{ name: 'Maryland PLC Data Catalog', desc: '1,100+ permit, license, and compliance types with operational metadata', url: 'https://opendata.maryland.gov/d/gdzy-2fen' },
+				{ name: 'DOL License Finder', desc: 'Federal database of licensing requirements across all states', url: 'https://www.careeronestop.org/toolkit/training/find-licenses.aspx' },
+				{ name: 'NCSL Database', desc: '48 occupations across all states for occupational licensing', url: 'https://knee.wvu.edu/data' },
+				{ name: 'Municipal Codes', desc: 'Common local permitting patterns for construction, land use, events', url: null as string | null }
 			] as source}
 				<div class="p-4" style="border: 1px solid var(--muted);">
-					<span class="font-mono text-xs font-bold block mb-1" style="color: var(--ink);">{source.name}</span>
-					<span class="font-body text-sm" style="color: var(--text);">{source.desc}</span>
+					{#if source.url}
+						<a
+							href={source.url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="font-mono text-xs font-bold mb-1 inline-flex items-center gap-1.5 underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity"
+							style="color: var(--ink);"
+						>
+							<span>{source.name}</span>
+							<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+								<path d="M4 1H1v10h10V8M7 1h4v4M11 1L5 7" stroke-linecap="round" stroke-linejoin="round" />
+							</svg>
+						</a>
+					{:else}
+						<span class="font-mono text-xs font-bold block mb-1" style="color: var(--ink);">{source.name}</span>
+					{/if}
+					<span class="font-body text-sm block mt-1" style="color: var(--text);">{source.desc}</span>
 				</div>
 			{/each}
 		</div>

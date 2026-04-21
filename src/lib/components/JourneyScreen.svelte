@@ -6,6 +6,7 @@
 	import MatrixGrid from './MatrixGrid.svelte';
 	import NodeDetailPanel from './NodeDetailPanel.svelte';
 	import ScreenSizeNotice from './ScreenSizeNotice.svelte';
+	import SourcesPanel from './SourcesPanel.svelte';
 
 	const isMobile = new IsMobile();
 
@@ -168,6 +169,7 @@
 			<div class="mt-6">
 				<MatrixGrid {journey} {isMobile} />
 			</div>
+			<SourcesPanel references={journey.references ?? []} />
 		</main>
 
 		<!-- Node Detail Panel -->

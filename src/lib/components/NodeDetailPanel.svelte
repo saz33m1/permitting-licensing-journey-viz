@@ -39,6 +39,10 @@
 
 	const isEntry = $derived(deps.length > 0 && isEntryPoint(node.id, deps));
 
+	const gotchasForNode = $derived(
+		app.activeJourney?.gotchas?.filter((g) => g.step === node.id) ?? []
+	);
+
 	function close() {
 		app.selectedNode = null;
 	}
@@ -97,6 +101,20 @@
 			{#if node.agency}
 				<p class="font-mono text-xs mt-3 tracking-wide uppercase" style="color: var(--text);">{node.agency}</p>
 			{/if}
+			{#if node.source?.url}
+				<a
+					href={node.source.url}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="font-body text-xs mt-2 inline-flex items-center gap-1.5 opacity-70 hover:opacity-100 transition-opacity"
+					style="color: var(--text);"
+				>
+					<span class="underline decoration-1 underline-offset-2">{node.source.title}</span>
+					<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+						<path d="M4 1H1v10h10V8M7 1h4v4M11 1L5 7" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+				</a>
+			{/if}
 		</div>
 	</div>
 
@@ -108,6 +126,39 @@
 				<h4 class="font-mono text-[11px] font-bold uppercase tracking-[0.2em] mb-4" style="color: var(--text);">Description</h4>
 				<div class="p-6" style="background: var(--newsprint); border-left: 4px solid var(--ink);">
 					<p class="font-body text-sm leading-relaxed italic" style="color: var(--text);">{node.description}</p>
+				</div>
+			</section>
+		{/if}
+
+		<!-- Gotchas -->
+		{#if gotchasForNode.length > 0}
+			<section>
+				<h4 class="font-mono text-[11px] font-bold uppercase tracking-[0.2em] mb-4" style="color: var(--text);">Common Gotchas</h4>
+				<div class="flex flex-col gap-3">
+					{#each gotchasForNode as gotcha (gotcha.step + gotcha.note)}
+						{@const sev = gotcha.severity === 'major' ? 'var(--severity-major)' : 'var(--severity-minor)'}
+						<div class="p-4" style="background: var(--newsprint); border-left: 4px solid {sev};">
+							<span
+								class="font-mono text-[10px] font-bold uppercase tracking-[0.1em]"
+								style="color: {gotcha.severity === 'major' ? 'var(--severity-major)' : 'var(--text)'};"
+							>{gotcha.severity}</span>
+							<p class="font-body text-sm leading-relaxed mt-1.5" style="color: var(--text);">{gotcha.note}</p>
+							{#if gotcha.source?.url}
+								<a
+									href={gotcha.source.url}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="font-mono text-[10px] uppercase tracking-[0.05em] mt-2 inline-flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity"
+									style="color: var(--text);"
+								>
+									<span>Source: {gotcha.source.title}</span>
+									<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+										<path d="M4 1H1v10h10V8M7 1h4v4M11 1L5 7" stroke-linecap="round" stroke-linejoin="round" />
+									</svg>
+								</a>
+							{/if}
+						</div>
+					{/each}
 				</div>
 			</section>
 		{/if}
