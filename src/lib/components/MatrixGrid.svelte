@@ -47,7 +47,7 @@
 		});
 	});
 
-	const orderedSteps = $derived(topoSort(journey.steps, journey.dependencies));
+	const orderedSteps = $derived(topoSort(journey.steps, journey.dependencies, app.nodeMap));
 	const matrix = $derived(computeMatrix(journey, app.nodeMap, orderedSteps));
 
 	const stepIndexMap = $derived.by(() => {
