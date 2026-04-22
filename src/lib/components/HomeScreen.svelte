@@ -33,7 +33,7 @@
 	<!-- Left Column: Context + Filters -->
 	<div class="w-full md:w-2/5 h-auto md:h-screen p-8 md:p-12 lg:p-16 flex flex-col shrink-0 overflow-y-auto" style="border-right: 1px solid var(--muted);">
 		<div class="space-y-8 max-w-md">
-			<h1 class="font-display text-4xl lg:text-5xl leading-[1.1] tracking-tight" style="color: var(--ink);">
+			<h1 class="font-display text-4xl lg:text-5xl font-bold leading-[1.1] tracking-tight" style="color: var(--ink);">
 				Permit & License Journey Explorer
 			</h1>
 			<p class="font-body text-base leading-relaxed" style="color: var(--text);">
