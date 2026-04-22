@@ -187,6 +187,7 @@
 										.filter((e) => e.type === 'hard')
 										.map((e) => app.nodeMap[e.from]?.name)
 										.filter(Boolean)}
+									{@const nodeGotchas = app.activeJourney?.gotchas?.filter((g) => g.step === node.id) ?? []}
 									<div
 										class="flex items-start gap-2"
 										style="transition: opacity 200ms ease; opacity: {dimmed ? 0.28 : 1};"
@@ -211,6 +212,20 @@
 														<span class="font-mono text-[10px] px-1.5 py-0.5" style="border: 1px solid var(--muted); color: var(--ink);">{name}</span>
 													{/each}
 												</div>
+											{/if}
+											{#if nodeGotchas.length > 0}
+												<ul class="mt-1.5 flex flex-col gap-1">
+													{#each nodeGotchas as gotcha (gotcha.step + gotcha.note)}
+														{@const isMajor = gotcha.severity === 'major'}
+														<li
+															class="font-body text-[11px] leading-snug flex gap-1.5"
+															style="color: {isMajor ? 'var(--severity-major)' : 'var(--text)'};"
+														>
+															<span class="font-mono font-bold shrink-0" aria-hidden="true">{isMajor ? '!' : 'i'}</span>
+															<span>{gotcha.note.length > 120 ? gotcha.note.slice(0, 120) + '…' : gotcha.note}</span>
+														</li>
+													{/each}
+												</ul>
 											{/if}
 										</div>
 									</div>
@@ -279,6 +294,7 @@
 							{#each sorted as node (node.id)}
 								{@const dimmed = connectedSet !== null && !connectedSet.has(node.id)}
 								{@const entry = entrySet.has(node.id)}
+								{@const hasGotchas = (app.activeJourney?.gotchas?.some((g) => g.step === node.id)) ?? false}
 								<div
 									class="relative"
 									style="margin-left: {(phaseStepRank[node.id] ?? 0) * 20}px; transition: opacity 200ms ease; opacity: {dimmed ? 0.28 : 1};"
@@ -290,6 +306,14 @@
 										>Start</span>
 									{/if}
 									<NodeCard {node} stepIndex={stepIndexMap[node.id]} />
+									{#if hasGotchas}
+										<span
+											class="absolute top-1 right-1 pointer-events-none"
+											style="width: 6px; height: 6px; background: var(--severity-major); z-index: 2;"
+											title="Has gotchas"
+											aria-label="Has gotchas"
+										></span>
+									{/if}
 								</div>
 							{/each}
 						</div>

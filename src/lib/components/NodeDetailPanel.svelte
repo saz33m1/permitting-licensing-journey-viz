@@ -2,7 +2,7 @@
 	import { app, JC } from '$lib/stores/app.svelte';
 	import { IsMobile } from '$lib/hooks/is-mobile.svelte.js';
 	import { isEntryPoint } from '$lib/utils/topoSort';
-	import type { PlcNode, Dependency } from '$lib/types';
+	import type { PlcNode, Dependency, Reference } from '$lib/types';
 
 	const isMobile = new IsMobile();
 
@@ -38,6 +38,30 @@
 	});
 
 	const isEntry = $derived(deps.length > 0 && isEntryPoint(node.id, deps));
+
+	const gotchasForNode = $derived(
+		app.activeJourney?.gotchas?.filter((g) => g.step === node.id) ?? []
+	);
+
+	type RefGroup = 'regulatory' | 'guide' | 'dataset';
+	const refGroupOrder: RefGroup[] = ['regulatory', 'guide', 'dataset'];
+	const refGroupLabels: Record<RefGroup, string> = {
+		regulatory: 'Regulatory',
+		guide: 'Industry Guides',
+		dataset: 'Datasets'
+	};
+
+	const journeyRefs = $derived(app.activeJourney?.references ?? []);
+	const groupedRefs = $derived.by(() => {
+		const groups: Record<RefGroup, Reference[]> = { regulatory: [], guide: [], dataset: [] };
+		for (const ref of journeyRefs) {
+			if (ref.type in groups) groups[ref.type].push(ref);
+		}
+		return groups;
+	});
+	const sourcesCount = $derived((node.source?.url ? 1 : 0) + journeyRefs.length);
+
+	let sourcesOpen = $state(false);
 
 	function close() {
 		app.selectedNode = null;
@@ -108,6 +132,39 @@
 				<h4 class="font-mono text-[11px] font-bold uppercase tracking-[0.2em] mb-4" style="color: var(--text);">Description</h4>
 				<div class="p-6" style="background: var(--newsprint); border-left: 4px solid var(--ink);">
 					<p class="font-body text-sm leading-relaxed italic" style="color: var(--text);">{node.description}</p>
+				</div>
+			</section>
+		{/if}
+
+		<!-- Gotchas -->
+		{#if gotchasForNode.length > 0}
+			<section>
+				<h4 class="font-mono text-[11px] font-bold uppercase tracking-[0.2em] mb-4" style="color: var(--text);">Common Gotchas</h4>
+				<div class="flex flex-col gap-3">
+					{#each gotchasForNode as gotcha (gotcha.step + gotcha.note)}
+						{@const sev = gotcha.severity === 'major' ? 'var(--severity-major)' : 'var(--severity-minor)'}
+						<div class="p-4" style="background: var(--newsprint); border-left: 4px solid {sev};">
+							<span
+								class="font-mono text-[10px] font-bold uppercase tracking-[0.1em]"
+								style="color: {gotcha.severity === 'major' ? 'var(--severity-major)' : 'var(--text)'};"
+							>{gotcha.severity}</span>
+							<p class="font-body text-sm leading-relaxed mt-1.5" style="color: var(--text);">{gotcha.note}</p>
+							{#if gotcha.source?.url}
+								<a
+									href={gotcha.source.url}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="font-mono text-[10px] uppercase tracking-[0.05em] mt-2 inline-flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity"
+									style="color: var(--text);"
+								>
+									<span>Source: {gotcha.source.title}</span>
+									<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+										<path d="M4 1H1v10h10V8M7 1h4v4M11 1L5 7" stroke-linecap="round" stroke-linejoin="round" />
+									</svg>
+								</a>
+							{/if}
+						</div>
+					{/each}
 				</div>
 			</section>
 		{/if}
@@ -208,6 +265,81 @@
 						</div>
 					{/if}
 				</div>
+			</section>
+		{/if}
+
+		<!-- Sources -->
+		{#if sourcesCount > 0}
+			<section class="pt-4" style="border-top: 1px solid var(--muted);">
+				<button
+					type="button"
+					onclick={() => (sourcesOpen = !sourcesOpen)}
+					class="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em]"
+					style="background: none; border: none; padding: 0; color: var(--text); cursor: pointer;"
+					aria-expanded={sourcesOpen}
+				>
+					<span
+						class="inline-block transition-transform"
+						style="transform: rotate({sourcesOpen ? 90 : 0}deg); font-size: 0.7em;"
+						aria-hidden="true"
+					>▶</span>
+					Sources ({sourcesCount})
+				</button>
+
+				{#if sourcesOpen}
+					<div class="mt-4 flex flex-col gap-5">
+						{#if node.source?.url}
+							<div>
+								<h5 class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style="color: var(--text);">
+									For this step
+								</h5>
+								<div class="py-1.5" style="border-bottom: 1px solid var(--muted);">
+									<a
+										href={node.source.url}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="font-body text-sm underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity"
+										style="color: var(--ink);"
+									>
+										{node.source.title}
+									</a>
+								</div>
+							</div>
+						{/if}
+
+						{#each refGroupOrder as type (type)}
+							{#if groupedRefs[type].length > 0}
+								<div>
+									<h5 class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style="color: var(--text);">
+										{refGroupLabels[type]}
+									</h5>
+									<ul class="flex flex-col">
+										{#each groupedRefs[type] as ref (ref.url)}
+											<li
+												class="flex justify-between items-baseline gap-3 py-1.5"
+												style="border-bottom: 1px solid var(--muted);"
+											>
+												<a
+													href={ref.url}
+													target="_blank"
+													rel="noopener noreferrer"
+													class="font-body text-sm underline decoration-1 underline-offset-2 hover:opacity-70 transition-opacity"
+													style="color: var(--ink);"
+												>
+													{ref.title}
+												</a>
+												<span
+													class="font-mono text-[10px] uppercase tracking-wider shrink-0"
+													style="color: var(--text);"
+												>{ref.accessed}</span>
+											</li>
+										{/each}
+									</ul>
+								</div>
+							{/if}
+						{/each}
+					</div>
+				{/if}
 			</section>
 		{/if}
 	</div>
