@@ -4,6 +4,8 @@
 	// import as raw text and parse. Keeps reference-data/MANIFEST.json as the
 	// canonical source of truth without duplicating it into the app.
 	import manifestRaw from '../../../reference-data/MANIFEST.json?raw';
+	import releasesData from '$lib/data/releases.json';
+	import type { Release } from '$lib/types';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -11,6 +13,16 @@
 	const manifest = JSON.parse(manifestRaw) as {
 		datasets: Array<{ name: string; description: string; url: string }>;
 	};
+
+	const releases = (releasesData as { releases: Release[] }).releases;
+
+	const dateFmt = new Intl.DateTimeFormat('en-US', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+		timeZone: 'UTC'
+	});
+	const formatReleaseDate = (iso: string) => dateFmt.format(new Date(iso + 'T00:00:00Z'));
 
 	type SourceCard = { name: string; desc: string; url: string | null };
 
@@ -421,6 +433,41 @@
 					</li>
 				{/each}
 			</ul>
+		</div>
+	</div>
+</section>
+
+<!-- WHAT'S NEW -->
+<section id="whats-new" class="w-full px-6 md:px-16 py-16 md:py-24" style="background: var(--surface); border-top: 1px solid var(--muted); border-bottom: 1px solid var(--muted);">
+	<div class="max-w-[1200px] mx-auto">
+		<span class="font-mono text-[10px] uppercase tracking-[2px] block mb-4" style="color: var(--text);">Release history</span>
+		<h2 class="font-display text-3xl md:text-4xl leading-[1.1] tracking-tight mb-12" style="color: var(--ink);">
+			What's new
+		</h2>
+		<div class="flex flex-col gap-4">
+			{#each releases as release (release.version)}
+				<article class="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-6 md:gap-10 p-6 md:p-8" style="border: 1px solid var(--muted); background: var(--newsprint);">
+					<div class="flex md:flex-col gap-3 md:gap-1 items-baseline md:items-start">
+						<span class="font-mono text-2xl md:text-3xl font-bold leading-none" style="color: var(--ink);">v{release.version}</span>
+						<span class="font-mono text-[10px] uppercase tracking-[2px]" style="color: var(--text);">{formatReleaseDate(release.date)}</span>
+					</div>
+					<div>
+						<h3 class="font-display text-xl md:text-2xl font-semibold mb-3" style="color: var(--ink);">{release.title}</h3>
+						<p class="font-body text-base leading-relaxed mb-5" style="color: var(--text);">{release.lead}</p>
+						<ul class="space-y-3">
+							{#each release.changes as change (change.title)}
+								<li class="flex gap-3">
+									<span class="font-mono text-sm font-bold shrink-0 mt-0.5" style="color: var(--state);">+</span>
+									<span class="font-body text-sm leading-relaxed" style="color: var(--text);">
+										<strong style="color: var(--ink);">{change.title}</strong>
+										{change.body}
+									</span>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				</article>
+			{/each}
 		</div>
 	</div>
 </section>

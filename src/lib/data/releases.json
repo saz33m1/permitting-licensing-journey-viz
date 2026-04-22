@@ -1,0 +1,76 @@
+{
+	"releases": [
+		{
+			"version": "1.2",
+			"date": "2026-04-21",
+			"title": "Fully Grounded with hundreds of  data sources",
+			"lead": "Every step in every journey now carries an authoritative source, and high-friction steps are annotated with real-world gotchas.",
+			"changes": [
+				{
+					"title": "Source citations, everywhere.",
+					"body": "Each of the 57 permit / license / certification types links out to its official reference — IRS for an EIN, FDA for food registration, the International Code Council for a building permit."
+				},
+				{
+					"title": "Gotchas on high-friction steps.",
+					"body": "454 annotated gotchas flag the places where applicants commonly stall, get rejected, or hit a surprise requirement. A red dot on a step means it has one."
+				},
+				{
+					"title": "Journey sources panel.",
+					"body": "A collapsible panel under each journey lists the broader references grouped into regulatory, industry guides, and datasets."
+				},
+				{
+					"title": "Methodology redesign.",
+					"body": "This page was rebuilt as a dossier on the underlying dataset — live counters, the dependency-edge taxonomy, sample gotchas, the three-layer citation architecture, and the most-cited source domains."
+				}
+			]
+		},
+		{
+			"version": "1.1",
+			"date": "2026-04-20",
+			"title": "Dependency-aware journeys",
+			"lead": "Journey steps now sequence themselves by real-world prerequisites. Zoning approval comes before a building permit because it has to.",
+			"changes": [
+				{
+					"title": "Smarter step ordering.",
+					"body": "Each step sits after everything it depends on. Within any level, shorter steps come first so the longest remaining hurdle is the visible next milestone."
+				},
+				{
+					"title": "Dependency View.",
+					"body": "A toggle replaces the matrix with an animated flow of how steps connect. Ambient loops through the journey as a guided tour; Realistic plays once at one day ≈ 0.1 seconds and surfaces the minimum total time if independent steps run in parallel."
+				},
+				{
+					"title": "167 new dependency edges,",
+					"body": "each typed as hard (blocks the next step), soft (conventional but not required), or parallel (can happen concurrently)."
+				},
+				{
+					"title": "Mobile-ready.",
+					"body": "The journey page works on phones with a phase-by-phase accordion and compact timeline."
+				}
+			]
+		},
+		{
+			"version": "1.0",
+			"date": "2026-04-19",
+			"title": "Launch",
+			"lead": "The Permit & License Journey Explorer goes public — 114 real-world journeys across 15 categories, mapped across federal, state, and local requirements.",
+			"changes": [
+				{
+					"title": "114 journeys,",
+					"body": "from opening a restaurant to becoming a nurse to hosting a street festival."
+				},
+				{
+					"title": "Jurisdictional matrix view.",
+					"body": "Each journey renders as a four-phase by three-jurisdiction grid so you can see which permits come from which level of government at a glance."
+				},
+				{
+					"title": "Search and filter.",
+					"body": "Find a journey by name, or narrow the list by jurisdiction and category."
+				},
+				{
+					"title": "Step details.",
+					"body": "Tap any step to see its agency, application fee, processing time, renewal cycle, and downstream impact."
+				}
+			]
+		}
+	]
+}

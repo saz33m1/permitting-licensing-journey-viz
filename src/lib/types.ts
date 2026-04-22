@@ -35,6 +35,19 @@ export interface RuleException {
 	reason: string;
 }
 
+export interface ReleaseChange {
+	title: string;
+	body: string;
+}
+
+export interface Release {
+	version: string;
+	date: string;
+	title: string;
+	lead: string;
+	changes: ReleaseChange[];
+}
+
 export interface PlcNode {
 	id: string;
 	name: string;
