@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="geometricPrecision">
+	<!-- Ink background, zero-radius: matches editorial newsprint aesthetic -->
+	<rect width="32" height="32" fill="#1C1B1A"/>
+	<!-- Connecting edges (solid = hard dependency, like FlowPathOverlay strokes) -->
+	<path d="M8 10 L22 10" stroke="#F4F3F0" stroke-width="2" stroke-linecap="round"/>
+	<path d="M22 10 L16 23" stroke="#F4F3F0" stroke-width="2" stroke-linecap="round"/>
+	<!-- Three jurisdiction nodes: federal / state / local -->
+	<circle cx="8" cy="10" r="5" fill="#2A4B7C"/>
+	<circle cx="22" cy="10" r="5" fill="#4A6D5E"/>
+	<circle cx="16" cy="23" r="5" fill="#8C5A46"/>
+</svg>
